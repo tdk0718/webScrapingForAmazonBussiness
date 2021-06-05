@@ -193,7 +193,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
           )
         }
         driver[((pageNum + 2) % 2) + 1].get(
-          'https://www.amazon.co.jp/s?k=' + putKeyword + '&page=' + pageNum + 1 + '&node=' + node
+          'https://www.amazon.co.jp/s?k=' + putKeyword + '&page=' + (pageNum + 1) + '&node=' + node
         )
 
         await driver[n].wait(until.elementLocated(By.id('search')), 10000)
@@ -202,7 +202,32 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
           By.css('.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20')
         )
 
-        if (numPerPage.length < 20) break
+        const pageOverFlow = await driver[n]
+          .findElement(
+            By.css(
+              '.sg-col-14-of-20.sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)'
+            )
+          )
+          .getText()
+
+        const pageOverFlowArray = pageOverFlow.replace(' 以上', '').split(' ')
+
+        // 検索結果 20,000 以上 のうち 49-72件 "並行輸入"
+        console.log(pageOverFlowArray)
+        if (pageOverFlowArray[3]) {
+          const currentNum = Number(pageOverFlowArray[3].split('-')[0].replace(',', ''))
+
+          console.log(pageOverFlowArray[3].split('-')[1])
+          const limitNum = Number(
+            pageOverFlowArray[3]
+              .split('-')[1]
+              .replace('件', '')
+              .replace(',', '')
+          )
+          console.log(pageOverFlow)
+          console.log(pageOverFlowArray[3])
+          if (currentNum > limitNum) break
+        }
 
         for (let i = 1; i <= numPerPage.length; i++) {
           let result = {}
@@ -309,7 +334,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
           }
         }
 
-        pageNum = pageNum + 1
+        pageNum += 1
       }
     }
   }

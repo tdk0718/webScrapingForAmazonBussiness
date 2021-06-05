@@ -180,11 +180,21 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
         if (pageNum === 1) {
           driver[1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
         }
-        driver[(pageNum + 2) % 2 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + 1 + "&node=" + node);
+        driver[(pageNum + 2) % 2 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + (pageNum + 1) + "&node=" + node);
         await driver[n].wait(until.elementLocated(By.id("search")), 1e4);
         const numPerPage = await driver[n].findElements(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20"));
-        if (numPerPage.length < 20)
-          break;
+        const pageOverFlow = await driver[n].findElement(By.css(".sg-col-14-of-20.sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)")).getText();
+        const pageOverFlowArray = pageOverFlow.replace(" \u4EE5\u4E0A", "").split(" ");
+        console.log(pageOverFlowArray);
+        if (pageOverFlowArray[3]) {
+          const currentNum = Number(pageOverFlowArray[3].split("-")[0].replace(",", ""));
+          console.log(pageOverFlowArray[3].split("-")[1]);
+          const limitNum = Number(pageOverFlowArray[3].split("-")[1].replace("\u4EF6", "").replace(",", ""));
+          console.log(pageOverFlow);
+          console.log(pageOverFlowArray[3]);
+          if (currentNum > limitNum)
+            break;
+        }
         for (let i = 1; i <= numPerPage.length; i++) {
           let result = {};
           const el = await driver[n].findElements(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ") span.a-size-base-plus.a-color-base.a-text-normal"));
@@ -218,7 +228,7 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
             }
           }
         }
-        pageNum = pageNum + 1;
+        pageNum += 1;
       }
     }
   }
