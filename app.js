@@ -232,7 +232,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
               )
               .getAttribute('data-asin')
 
-            if (!itemsData.isHaveId(asin)) {
+            if (!itemsData.getDocById(asin)?.id) {
               const title = driver[n].findElement(
                 By.css(
                   '.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(' +
@@ -294,12 +294,14 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
               }
 
               result.asin = asin
+              result.id = asin
               result.linkInUS = 'https://amazon.com/dp/' + asin
               result.keyword = putKeyword
 
               // Call eachItemInfoAtUsa(n, driver02)
               const today = new Date()
               result.created_at = today
+              result.category = categories[t].keyword
               await ref.doc(result.asin).set(result)
               console.log(result)
               console.log(itemsData.getDocs().length)

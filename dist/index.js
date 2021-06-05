@@ -156,6 +156,7 @@ var categories = [
 ];
 var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u30F3\u30DD\u30FC\u30C8", "\u6D77\u5916", "\u5317\u7C73", "\u56FD\u540D", "\u65E5\u672C\u672A\u767A\u58F2"];
 (async () => {
+  var _a;
   console.log("start");
   await itemsData.stream();
   await categoriesData.stream();
@@ -182,7 +183,7 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
         driver[(pageNum + 2) % 2 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + 1 + "&node=" + node);
         await driver[n].wait(until.elementLocated(By.id("search")), 1e4);
         const numPerPage = await driver[n].findElements(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20"));
-        if (numPerPage.length < 10)
+        if (numPerPage.length < 20)
           break;
         for (let i = 1; i <= numPerPage.length; i++) {
           let result = {};
@@ -190,7 +191,7 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
           console.log(i);
           if (el.length) {
             const asin = await driver[n].findElement(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ")")).getAttribute("data-asin");
-            if (!itemsData.isHaveId(asin)) {
+            if (!((_a = itemsData.getDocById(asin)) == null ? void 0 : _a.id)) {
               const title = driver[n].findElement(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ") h2.a-size-mini.a-spacing-none.a-color-base.s-line-clamp-4 > a"));
               const text = await title.getText();
               result.title = text;
@@ -205,10 +206,12 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
                 result.priceInJp = await driver[n].findElement(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ") span.a-price-whole")).getText();
               }
               result.asin = asin;
+              result.id = asin;
               result.linkInUS = "https://amazon.com/dp/" + asin;
               result.keyword = putKeyword;
               const today = new Date();
               result.created_at = today;
+              result.category = categories[t].keyword;
               await ref.doc(result.asin).set(result);
               console.log(result);
               console.log(itemsData.getDocs().length);
