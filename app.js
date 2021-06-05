@@ -172,26 +172,33 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
   capabilities.set('chromeOptions', {
     args: ['--headless', '--no-sandbox', '--disable-gpu', `--window-size=1980,1200`],
   })
-  const driver = await new Builder().withCapabilities(capabilities).build()
+  const driver = []
+  driver[1] = await new Builder().withCapabilities(capabilities).build()
+  driver[2] = await new Builder().withCapabilities(capabilities).build()
 
   const ref = await db.collection('Items')
   const items = await ref.get()
-
-  let pageNum = 1
 
   for (let j = 0; j < keywords.length; j++) {
     const putKeyword = keywords[j]
     for (let t = 0; t < categories.length; t++) {
       const node = categories[t].code
-
+      let pageNum = 1
       while (pageNum < 1000) {
-        driver.get(
-          'https://www.amazon.co.jp/s?k=' + putKeyword + '&page=' + pageNum + '&node=' + node
+        const n = ((pageNum + 1) % 2) + 1
+        console.log(n)
+        if (pageNum === 1) {
+          driver[1].get(
+            'https://www.amazon.co.jp/s?k=' + putKeyword + '&page=' + pageNum + '&node=' + node
+          )
+        }
+        driver[((pageNum + 2) % 2) + 1].get(
+          'https://www.amazon.co.jp/s?k=' + putKeyword + '&page=' + pageNum + 1 + '&node=' + node
         )
 
-        await driver.wait(until.elementLocated(By.id('search')), 10000)
+        await driver[n].wait(until.elementLocated(By.id('search')), 10000)
 
-        const numPerPage = await driver.findElements(
+        const numPerPage = await driver[n].findElements(
           By.css('.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20')
         )
 
@@ -199,13 +206,13 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
 
         for (let i = 1; i <= numPerPage.length; i++) {
           let result = {}
-          // let base64 = await driver.takeScreenshot()
+          // let base64 = await driver[n].takeScreenshot()
           // let buffer = Buffer.from(base64, 'base64')
 
           // // bufferを保存
           // await promisify(fs.writeFile)('screenshot.jpg', buffer)
 
-          const el = await driver.findElements(
+          const el = await driver[n].findElements(
             By.css(
               '.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(' +
                 i +
@@ -215,7 +222,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
 
           console.log(i)
           if (el.length) {
-            const asin = await driver
+            const asin = await driver[n]
               .findElement(
                 By.css(
                   '.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(' +
@@ -226,7 +233,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
               .getAttribute('data-asin')
 
             if (!itemsData.isHaveId(asin)) {
-              const title = driver.findElement(
+              const title = driver[n].findElement(
                 By.css(
                   '.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(' +
                     i +
@@ -235,7 +242,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
               )
               const text = await title.getText()
               result.title = text
-              const href = await driver
+              const href = await driver[n]
                 .findElement(
                   By.css(
                     '.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(' +
@@ -248,7 +255,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
               result.link = 'https://amazon.co.jp' + href
 
               if (
-                await driver.findElements(
+                await driver[n].findElements(
                   By.css(
                     '.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(' +
                       i +
@@ -256,7 +263,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                   )
                 )
               ) {
-                const src = await driver
+                const src = await driver[n]
                   .findElement(
                     By.css(
                       '.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(' +
@@ -267,7 +274,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                   .getAttribute('src')
                 result.imageLink = src
               }
-              const priceExist = await driver.findElements(
+              const priceExist = await driver[n].findElements(
                 By.css(
                   '.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(' +
                     i +
@@ -275,7 +282,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                 )
               )
               if (priceExist.length) {
-                result.priceInJp = await driver
+                result.priceInJp = await driver[n]
                   .findElement(
                     By.css(
                       '.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(' +
@@ -305,13 +312,14 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
     }
   }
 
-  //   const title = await driver.findElement(By.id('productTitle')).getText()
+  //   const title = await driver[n].findElement(By.id('productTitle')).getText()
   //   await ref.doc('title').set({ name: title })
   // } catch (err) {
   //   console.log(err)
   // }
   console.log('fin')
-  driver.quit()
+  driver[1].quit()
+  driver[2].quit()
 
   return
 })()
