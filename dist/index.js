@@ -163,39 +163,46 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
   capabilities.set("chromeOptions", {
     args: ["--headless", "--no-sandbox", "--disable-gpu", `--window-size=1980,1200`]
   });
-  const driver = await new Builder().withCapabilities(capabilities).build();
+  const driver = [];
+  driver[1] = await new Builder().withCapabilities(capabilities).build();
+  driver[2] = await new Builder().withCapabilities(capabilities).build();
   const ref = await db.collection("Items");
   const items = await ref.get();
-  let pageNum = 1;
   for (let j = 0; j < keywords.length; j++) {
     const putKeyword = keywords[j];
     for (let t = 0; t < categories.length; t++) {
       const node = categories[t].code;
+      let pageNum = 1;
       while (pageNum < 1e3) {
-        driver.get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
-        await driver.wait(until.elementLocated(By.id("search")), 1e4);
-        const numPerPage = await driver.findElements(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20"));
+        const n = (pageNum + 1) % 2 + 1;
+        console.log(n);
+        if (pageNum === 1) {
+          driver[1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
+        }
+        driver[(pageNum + 2) % 2 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + 1 + "&node=" + node);
+        await driver[n].wait(until.elementLocated(By.id("search")), 1e4);
+        const numPerPage = await driver[n].findElements(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20"));
         if (numPerPage.length < 10)
           break;
         for (let i = 1; i <= numPerPage.length; i++) {
           let result = {};
-          const el = await driver.findElements(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ") span.a-size-base-plus.a-color-base.a-text-normal"));
+          const el = await driver[n].findElements(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ") span.a-size-base-plus.a-color-base.a-text-normal"));
           console.log(i);
           if (el.length) {
-            const asin = await driver.findElement(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ")")).getAttribute("data-asin");
+            const asin = await driver[n].findElement(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ")")).getAttribute("data-asin");
             if (!itemsData.isHaveId(asin)) {
-              const title = driver.findElement(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ") h2.a-size-mini.a-spacing-none.a-color-base.s-line-clamp-4 > a"));
+              const title = driver[n].findElement(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ") h2.a-size-mini.a-spacing-none.a-color-base.s-line-clamp-4 > a"));
               const text = await title.getText();
               result.title = text;
-              const href = await driver.findElement(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ") h2.a-size-mini.a-spacing-none.a-color-base.s-line-clamp-4 > a")).getAttribute("href");
+              const href = await driver[n].findElement(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ") h2.a-size-mini.a-spacing-none.a-color-base.s-line-clamp-4 > a")).getAttribute("href");
               result.link = "https://amazon.co.jp" + href;
-              if (await driver.findElements(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ") img.s-image"))) {
-                const src = await driver.findElement(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ") img.s-image")).getAttribute("src");
+              if (await driver[n].findElements(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ") img.s-image"))) {
+                const src = await driver[n].findElement(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ") img.s-image")).getAttribute("src");
                 result.imageLink = src;
               }
-              const priceExist = await driver.findElements(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ") span.a-price-whole"));
+              const priceExist = await driver[n].findElements(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ") span.a-price-whole"));
               if (priceExist.length) {
-                result.priceInJp = await driver.findElement(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ") span.a-price-whole")).getText();
+                result.priceInJp = await driver[n].findElement(By.css(".sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(" + i + ") span.a-price-whole")).getText();
               }
               result.asin = asin;
               result.linkInUS = "https://amazon.com/dp/" + asin;
@@ -213,6 +220,7 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
     }
   }
   console.log("fin");
-  driver.quit();
+  driver[1].quit();
+  driver[2].quit();
   return;
 })();
