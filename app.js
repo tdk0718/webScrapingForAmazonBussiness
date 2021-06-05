@@ -175,6 +175,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
   const driver = []
   driver[1] = await new Builder().withCapabilities(capabilities).build()
   driver[2] = await new Builder().withCapabilities(capabilities).build()
+  driver[3] = await new Builder().withCapabilities(capabilities).build()
 
   const ref = await db.collection('Items')
   const items = await ref.get()
@@ -185,14 +186,17 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
       const node = categories[t].code
       let pageNum = 1
       while (pageNum < 1000) {
-        const n = ((pageNum + 1) % 2) + 1
+        const n = ((pageNum + 2) % 3) + 1
         console.log(n)
         if (pageNum === 1) {
           driver[1].get(
             'https://www.amazon.co.jp/s?k=' + putKeyword + '&page=' + pageNum + '&node=' + node
           )
+          driver[2].get(
+            'https://www.amazon.co.jp/s?k=' + putKeyword + '&page=' + pageNum + '&node=' + node
+          )
         }
-        driver[((pageNum + 2) % 2) + 1].get(
+        driver[((pageNum + 1) % 3) + 1].get(
           'https://www.amazon.co.jp/s?k=' + putKeyword + '&page=' + (pageNum + 1) + '&node=' + node
         )
 
@@ -272,26 +276,26 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
 
               result.link = 'https://amazon.co.jp' + href
 
-              if (
-                await driver[n].findElements(
-                  By.css('.s-result-item.s-asin:nth-child(' + i + ') img.s-image')
+              // if (
+              //   await driver[n].findElements(
+              //     By.css('.s-result-item.s-asin:nth-child(' + i + ') img.s-image')
+              //   )
+              // ) {
+              const src = await driver[n]
+                .findElement(By.css('.s-result-item.s-asin:nth-child(' + i + ') img.s-image'))
+                .getAttribute('src')
+              result.imageLink = src
+              // }
+              // const priceExist = await driver[n].findElements(
+              //   By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
+              // )
+              // if (priceExist.length) {
+              result.priceInJp = await driver[n]
+                .findElement(
+                  By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
                 )
-              ) {
-                const src = await driver[n]
-                  .findElement(By.css('.s-result-item.s-asin:nth-child(' + i + ') img.s-image'))
-                  .getAttribute('src')
-                result.imageLink = src
-              }
-              const priceExist = await driver[n].findElements(
-                By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
-              )
-              if (priceExist.length) {
-                result.priceInJp = await driver[n]
-                  .findElement(
-                    By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
-                  )
-                  .getText()
-              }
+                .getText()
+              // }
 
               result.asin = asin
               result.id = asin
@@ -322,6 +326,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
   console.log('fin')
   driver[1].quit()
   driver[2].quit()
+  driver[3].quit()
 
   return
 })()
