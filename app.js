@@ -198,9 +198,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
 
         await driver[n].wait(until.elementLocated(By.id('search')), 10000)
 
-        const numPerPage = await driver[n].findElements(
-          By.css('.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20')
-        )
+        const numPerPage = await driver[n].findElements(By.css('.s-result-item.s-asin'))
 
         const pageOverFlow = await driver[n]
           .findElement(
@@ -240,7 +238,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
 
           const el = await driver[n].findElements(
             By.css(
-              '.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(' +
+              '.s-result-item.s-asin:nth-child(' +
                 i +
                 ') span.a-size-base-plus.a-color-base.a-text-normal'
             )
@@ -249,19 +247,13 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
           console.log(i)
           if (el.length) {
             const asin = await driver[n]
-              .findElement(
-                By.css(
-                  '.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(' +
-                    i +
-                    ')'
-                )
-              )
+              .findElement(By.css('.s-result-item.s-asin:nth-child(' + i + ')'))
               .getAttribute('data-asin')
 
             if (!itemsData.getDocById(asin)?.id) {
               const title = driver[n].findElement(
                 By.css(
-                  '.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(' +
+                  '.s-result-item.s-asin:nth-child(' +
                     i +
                     ') h2.a-size-mini.a-spacing-none.a-color-base.s-line-clamp-4 > a'
                 )
@@ -271,7 +263,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
               const href = await driver[n]
                 .findElement(
                   By.css(
-                    '.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(' +
+                    '.s-result-item.s-asin:nth-child(' +
                       i +
                       ') h2.a-size-mini.a-spacing-none.a-color-base.s-line-clamp-4 > a'
                   )
@@ -282,39 +274,21 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
 
               if (
                 await driver[n].findElements(
-                  By.css(
-                    '.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(' +
-                      i +
-                      ') img.s-image'
-                  )
+                  By.css('.s-result-item.s-asin:nth-child(' + i + ') img.s-image')
                 )
               ) {
                 const src = await driver[n]
-                  .findElement(
-                    By.css(
-                      '.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(' +
-                        i +
-                        ') img.s-image'
-                    )
-                  )
+                  .findElement(By.css('.s-result-item.s-asin:nth-child(' + i + ') img.s-image'))
                   .getAttribute('src')
                 result.imageLink = src
               }
               const priceExist = await driver[n].findElements(
-                By.css(
-                  '.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(' +
-                    i +
-                    ') span.a-price-whole'
-                )
+                By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
               )
               if (priceExist.length) {
                 result.priceInJp = await driver[n]
                   .findElement(
-                    By.css(
-                      '.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20:nth-child(' +
-                        i +
-                        ') span.a-price-whole'
-                    )
+                    By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
                   )
                   .getText()
               }
