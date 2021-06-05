@@ -202,7 +202,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
           By.css('.sg-col-4-of-12.s-result-item.s-asin.sg-col-4-of-16.sg-col.sg-col-4-of-20')
         )
 
-        if (numPerPage.length < 10) break
+        if (numPerPage.length < 20) break
 
         for (let i = 1; i <= numPerPage.length; i++) {
           let result = {}
