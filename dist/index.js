@@ -192,6 +192,7 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
           const limitNum = Number(pageOverFlowArray[3].split("-")[1].replace("\u4EF6", "").replace(",", ""));
           console.log(pageOverFlow);
           console.log(pageOverFlowArray[3]);
+          console.log(currentNum, limitNum);
           if (currentNum > limitNum)
             break;
         }

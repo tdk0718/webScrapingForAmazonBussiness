@@ -226,6 +226,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
           )
           console.log(pageOverFlow)
           console.log(pageOverFlowArray[3])
+          console.log(currentNum, limitNum)
           if (currentNum > limitNum) break
         }
 
