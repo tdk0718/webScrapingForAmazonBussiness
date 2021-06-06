@@ -20,6 +20,8 @@ const app = Firebase.initializeApp({
   appId: '1:843243345021:web:908bb33aaaeec9c59dcd14',
 })
 
+import { sort } from 'fast-sort'
+
 const db = Firebase.firestore(app)
 
 const itemsData = {
@@ -64,6 +66,45 @@ const categoriesData = {
       result.push(el.data())
     })
     return result
+  },
+}
+
+const logsData = {
+  logDB: [],
+  async stream() {
+    const ref = await db.collection('Logs')
+    ref.onSnapshot(res => {
+      this.logDB = res
+    })
+  },
+  async getDocs() {
+    const result = []
+
+    this.logDB.forEach(el => {
+      result.push(el.data())
+    })
+    return result
+  },
+  getLatestDoc() {
+    let result = []
+    this.logDB.forEach(el => {
+      result.push(el.data())
+    })
+    if (!result.length) return []
+    const maxSearchIndex = sort(result).desc(r => r.searchTextIndex)[0].searchTextIndex
+    const maxNodeIndex = sort(result.filter(e => e.searchTextIndex === maxSearchIndex)).desc(
+      r => r.nodeIndex
+    )[0].nodeIndex
+    const maxPageNum = sort(
+      result.filter(e => e.searchTextIndex === maxSearchIndex && e.nodeIndex === maxNodeIndex)
+    ).desc(r => r.pageNum)[0].pageNum
+
+    return {
+      nodeIndex: maxNodeIndex,
+      pageNum: maxPageNum,
+
+      searchTextIndex: maxSearchIndex,
+    }
   },
 }
 
@@ -164,10 +205,15 @@ const keywordData = {
 const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外', '北米', '国名', '日本未発売']
 
 ;(async () => {
+  let isFirstLoad = true
+  let isExistTodayLog = false
+
   console.log('start')
   await itemsData.stream()
-  await categoriesData.stream()
+  // await categoriesData.stream()
+  await logsData.stream()
 
+  const logRef = await db.collection('Logs')
   const capabilities = webdriver.Capabilities.chrome()
   capabilities.set('chromeOptions', {
     args: ['--headless', '--no-sandbox', '--disable-gpu', `--window-size=1980,1200`],
@@ -180,12 +226,69 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
   const ref = await db.collection('Items')
   const items = await ref.get()
 
-  for (let j = 0; j < keywords.length; j++) {
-    const putKeyword = keywords[j]
-    for (let t = 0; t < categories.length; t++) {
-      const node = categories[t].code
-      let pageNum = 1
+  let logsDataObj
+
+  logsDataObj = logsData.getLatestDoc()
+
+  const latestLogDate = logsDataObj?.created_at?.seconds
+    ? new Date(logsDataObj.created_at.seconds * 1000)
+    : new Date(0)
+  const now = new Date()
+  let checkLogData = {}
+  if (
+    latestLogDate.getFullYear() +
+      '-' +
+      latestLogDate.getFullYear() +
+      '-' +
+      latestLogDate.getDate() ===
+    now.getFullYear() + '-' + now.getFullYear() + '-' + now.getDate()
+  ) {
+    isExistTodayLog = true
+    checkLogData = latestLogDate
+  }
+
+  for (
+    let j =
+      isFirstLoad && isExistTodayLog ? keywords.findIndex(el => el === checkLogData.searchText) : 0;
+    j < keywords.length;
+    j++
+  ) {
+    for (
+      let t =
+        isFirstLoad && isExistTodayLog
+          ? categories.findIndex(el => el.code === checkLogData.categoryNode)
+          : 0;
+      t < categories.length;
+      t++
+    ) {
+      // pageNum,
+      //             itemNumAtPage: i,
+      //             categoryNode: node,
+      //             searchText: putKeyword,
+      let pageNum = isFirstLoad && isExistTodayLog ? checkLogData.pageNum : 1
       while (pageNum < 1000) {
+        const currentLatestLog = logsData.getLatestDoc() || {}
+
+        if (j > currentLatestLog.searchTextIndex) {
+          j = currentLatestLog.searchTextIndex
+          t = currentLatestLog.nodeIndex
+          pageNum = currentLatestLog.pageNum
+        }
+
+        if (j === currentLatestLog.searchTextIndex && currentLatestLog.nodeIndex > t) {
+          t = currentLatestLog.nodeIndex
+          pageNum = currentLatestLog.pageNum
+        }
+        if (
+          j === currentLatestLog.searchTextIndex &&
+          currentLatestLog.nodeIndex > t &&
+          currentLatestLog.pageNum > pageNum
+        ) {
+          pageNum = currentLatestLog.pageNum
+        }
+
+        const putKeyword = keywords[j]
+        const node = categories[t].code
         const n = ((pageNum + 2) % 3) + 1
         console.log(n)
         if (pageNum === 1) {
@@ -233,6 +336,8 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
         }
 
         for (let i = 1; i <= numPerPage.length; i++) {
+          const currentLatestLog = logsData.getLatestDoc() || {}
+
           let result = {}
           // let base64 = await driver[n].takeScreenshot()
           // let buffer = Buffer.from(base64, 'base64')
@@ -249,6 +354,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
           )
 
           console.log(i)
+          const today = new Date()
           if (el.length) {
             const asin = await driver[n]
               .findElement(By.css('.s-result-item.s-asin:nth-child(' + i + ')'))
@@ -303,13 +409,25 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
               result.keyword = putKeyword
 
               // Call eachItemInfoAtUsa(n, driver02)
-              const today = new Date()
+
               result.created_at = today
               result.category = categories[t].keyword
+
               await ref.doc(result.asin).set(result)
               console.log(result)
               console.log(itemsData.getDocs().length)
             }
+            isFirstLoad = false
+            const logInfo = {
+              created_at: today,
+              pageNum,
+              itemNumAtPage: i,
+              categoryNode: node,
+              nodeIndex: t,
+              searchText: putKeyword,
+              searchTextIndex: j,
+            }
+            await logRef.doc().set(logInfo)
           }
         }
 

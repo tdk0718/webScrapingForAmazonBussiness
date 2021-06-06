@@ -17,6 +17,7 @@
     "core-js": "^3.6.5",
     "esbuild": "^0.12.5",
     "express": "^4.17.1",
+    "fast-sort": "^3.0.2",
     "firebase": "^8.6.4",
     "magnetar": "^0.2.1",
     "quasar": "^1.0.0",

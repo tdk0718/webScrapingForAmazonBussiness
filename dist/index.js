@@ -26,6 +26,7 @@ var import_storage = __toModule(require("firebase/storage"));
 var import_auth = __toModule(require("firebase/auth"));
 var import_functions = __toModule(require("firebase/functions"));
 var import_process = __toModule(require("process"));
+var import_fast_sort = __toModule(require("fast-sort"));
 var fs = require("fs");
 var { Builder, By, until } = import_selenium_webdriver.default;
 var app = import_app.default.initializeApp({
@@ -63,20 +64,36 @@ var itemsData = {
     return false;
   }
 };
-var categoriesData = {
-  keywordDB: [],
+var logsData = {
+  logDB: [],
   async stream() {
-    const ref = await db.collection("Category");
+    const ref = await db.collection("Logs");
     ref.onSnapshot((res) => {
-      this.categoryDB = res;
+      this.logDB = res;
     });
   },
-  getDocs() {
+  async getDocs() {
     const result = [];
-    this.categoryDB.forEach((el) => {
+    this.logDB.forEach((el) => {
       result.push(el.data());
     });
     return result;
+  },
+  getLatestDoc() {
+    let result = [];
+    this.logDB.forEach((el) => {
+      result.push(el.data());
+    });
+    if (!result.length)
+      return [];
+    const maxSearchIndex = (0, import_fast_sort.sort)(result).desc((r) => r.searchTextIndex)[0].searchTextIndex;
+    const maxNodeIndex = (0, import_fast_sort.sort)(result.filter((e) => e.searchTextIndex === maxSearchIndex)).desc((r) => r.nodeIndex)[0].nodeIndex;
+    const maxPageNum = (0, import_fast_sort.sort)(result.filter((e) => e.searchTextIndex === maxSearchIndex && e.nodeIndex === maxNodeIndex)).desc((r) => r.pageNum)[0].pageNum;
+    return {
+      nodeIndex: maxNodeIndex,
+      pageNum: maxPageNum,
+      searchTextIndex: maxSearchIndex
+    };
   }
 };
 var categories = [
@@ -156,10 +173,13 @@ var categories = [
 ];
 var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u30F3\u30DD\u30FC\u30C8", "\u6D77\u5916", "\u5317\u7C73", "\u56FD\u540D", "\u65E5\u672C\u672A\u767A\u58F2"];
 (async () => {
-  var _a;
+  var _a, _b;
+  let isFirstLoad = true;
+  let isExistTodayLog = false;
   console.log("start");
   await itemsData.stream();
-  await categoriesData.stream();
+  await logsData.stream();
+  const logRef = await db.collection("Logs");
   const capabilities = import_selenium_webdriver.default.Capabilities.chrome();
   capabilities.set("chromeOptions", {
     args: ["--headless", "--no-sandbox", "--disable-gpu", `--window-size=1980,1200`]
@@ -170,12 +190,34 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
   driver[3] = await new Builder().withCapabilities(capabilities).build();
   const ref = await db.collection("Items");
   const items = await ref.get();
-  for (let j = 0; j < keywords.length; j++) {
-    const putKeyword = keywords[j];
-    for (let t = 0; t < categories.length; t++) {
-      const node = categories[t].code;
-      let pageNum = 1;
+  let logsDataObj;
+  logsDataObj = logsData.getLatestDoc();
+  const latestLogDate = ((_a = logsDataObj == null ? void 0 : logsDataObj.created_at) == null ? void 0 : _a.seconds) ? new Date(logsDataObj.created_at.seconds * 1e3) : new Date(0);
+  const now = new Date();
+  let checkLogData = {};
+  if (latestLogDate.getFullYear() + "-" + latestLogDate.getFullYear() + "-" + latestLogDate.getDate() === now.getFullYear() + "-" + now.getFullYear() + "-" + now.getDate()) {
+    isExistTodayLog = true;
+    checkLogData = latestLogDate;
+  }
+  for (let j = isFirstLoad && isExistTodayLog ? keywords.findIndex((el) => el === checkLogData.searchText) : 0; j < keywords.length; j++) {
+    for (let t = isFirstLoad && isExistTodayLog ? categories.findIndex((el) => el.code === checkLogData.categoryNode) : 0; t < categories.length; t++) {
+      let pageNum = isFirstLoad && isExistTodayLog ? checkLogData.pageNum : 1;
       while (pageNum < 1e3) {
+        const currentLatestLog = logsData.getLatestDoc() || {};
+        if (j > currentLatestLog.searchTextIndex) {
+          j = currentLatestLog.searchTextIndex;
+          t = currentLatestLog.nodeIndex;
+          pageNum = currentLatestLog.pageNum;
+        }
+        if (j === currentLatestLog.searchTextIndex && currentLatestLog.nodeIndex > t) {
+          t = currentLatestLog.nodeIndex;
+          pageNum = currentLatestLog.pageNum;
+        }
+        if (j === currentLatestLog.searchTextIndex && currentLatestLog.nodeIndex > t && currentLatestLog.pageNum > pageNum) {
+          pageNum = currentLatestLog.pageNum;
+        }
+        const putKeyword = keywords[j];
+        const node = categories[t].code;
         const n = (pageNum + 2) % 3 + 1;
         console.log(n);
         if (pageNum === 1) {
@@ -199,31 +241,48 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
             break;
         }
         for (let i = 1; i <= numPerPage.length; i++) {
+          const currentLatestLog2 = logsData.getLatestDoc() || {};
           let result = {};
           const el = await driver[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-size-base-plus.a-color-base.a-text-normal"));
           console.log(i);
+          const today = new Date();
           if (el.length) {
             const asin = await driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ")")).getAttribute("data-asin");
-            if (!((_a = itemsData.getDocById(asin)) == null ? void 0 : _a.id)) {
+            if (!((_b = itemsData.getDocById(asin)) == null ? void 0 : _b.id)) {
               const title = driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-size-mini.a-spacing-none.a-color-base.s-line-clamp-4 > a"));
               const text = await title.getText();
               result.title = text;
               const href = await driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-size-mini.a-spacing-none.a-color-base.s-line-clamp-4 > a")).getAttribute("href");
               result.link = "https://amazon.co.jp" + href;
-              const src = await driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") img.s-image")).getAttribute("src");
-              result.imageLink = src;
-              result.priceInJp = await driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole")).getText();
+              if (await driver[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") img.s-image"))) {
+                const src = await driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") img.s-image")).getAttribute("src");
+                result.imageLink = src;
+              }
+              const priceExist = await driver[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole"));
+              if (priceExist.length) {
+                result.priceInJp = await driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole")).getText();
+              }
               result.asin = asin;
               result.id = asin;
               result.linkInUS = "https://amazon.com/dp/" + asin;
               result.keyword = putKeyword;
-              const today = new Date();
               result.created_at = today;
               result.category = categories[t].keyword;
               await ref.doc(result.asin).set(result);
               console.log(result);
               console.log(itemsData.getDocs().length);
             }
+            isFirstLoad = false;
+            const logInfo = {
+              created_at: today,
+              pageNum,
+              itemNumAtPage: i,
+              categoryNode: node,
+              nodeIndex: t,
+              searchText: putKeyword,
+              searchTextIndex: j
+            };
+            await logRef.doc().set(logInfo);
           }
         }
         pageNum += 1;
