@@ -276,26 +276,26 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
 
               result.link = 'https://amazon.co.jp' + href
 
-              // if (
-              //   await driver[n].findElements(
-              //     By.css('.s-result-item.s-asin:nth-child(' + i + ') img.s-image')
-              //   )
-              // ) {
-              const src = await driver[n]
-                .findElement(By.css('.s-result-item.s-asin:nth-child(' + i + ') img.s-image'))
-                .getAttribute('src')
-              result.imageLink = src
-              // }
-              // const priceExist = await driver[n].findElements(
-              //   By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
-              // )
-              // if (priceExist.length) {
-              result.priceInJp = await driver[n]
-                .findElement(
-                  By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
+              if (
+                await driver[n].findElements(
+                  By.css('.s-result-item.s-asin:nth-child(' + i + ') img.s-image')
                 )
-                .getText()
-              // }
+              ) {
+                const src = await driver[n]
+                  .findElement(By.css('.s-result-item.s-asin:nth-child(' + i + ') img.s-image'))
+                  .getAttribute('src')
+                result.imageLink = src
+              }
+              const priceExist = await driver[n].findElements(
+                By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
+              )
+              if (priceExist.length) {
+                result.priceInJp = await driver[n]
+                  .findElement(
+                    By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
+                  )
+                  .getText()
+              }
 
               result.asin = asin
               result.id = asin
