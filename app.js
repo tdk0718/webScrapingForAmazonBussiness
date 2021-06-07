@@ -415,7 +415,8 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                     By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
                   )
                   .getText()
-                priceInJp = priceInJp.replace(/,/g, '')
+                priceInJp = priceInJp.replace(/,/g, '').replace('￥', '')
+                console.log(priceInJp)
                 if (Number(priceInJp) > 3000 && !itemsData.getDocById(asin)?.id) {
                   result.priceInJp = Number(priceInJp)
                   const title = driver[n].findElement(
