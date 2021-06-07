@@ -40,12 +40,12 @@ function createNewAccessId() {
 
 const itemsData = {
   itemDB: [],
-  async stream() {
+  async stream({ node }) {
     await db
       .collection('Items')
       .doc(currentDate)
       .set({ created_at: current })
-    const ref = await db.collection(`Items/${currentDate}/items`)
+    const ref = await db.collection(`Items/${currentDate}/items`).where('categoryNode', '==', node)
     ref.onSnapshot(res => {
       this.itemDB = res
     })
@@ -233,7 +233,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
     let isExistTodayLog = false
 
     console.log('start')
-    await itemsData.stream()
+
     // await categoriesData.stream()
     await logsData.stream()
 
@@ -287,6 +287,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
         t < categories.length;
         t++
       ) {
+        await itemsData.stream({ node: categories[t].code })
         // pageNum,
         //             itemNumAtPage: i,
         //             categoryNode: node,
@@ -407,7 +408,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
               const priceExist = await driver[n].findElements(
                 By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
               )
-              console.log('priceExist=>', priceExist)
+
               if (!itemsData.getDocById(asin)?.id && priceExist.length) {
                 result.priceInJp = await driver[n]
                   .findElement(
@@ -442,6 +443,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                 result.id = asin
                 result.linkInUS = 'https://amazon.com/dp/' + asin
                 result.keyword = putKeyword
+                result.categoryNode = node
 
                 // Call eachItemInfoAtUsa(n, driver02)
 

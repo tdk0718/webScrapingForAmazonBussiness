@@ -51,9 +51,9 @@ function createNewAccessId() {
 }
 var itemsData = {
   itemDB: [],
-  async stream() {
+  async stream({ node }) {
     await db.collection("Items").doc(currentDate).set({ created_at: current });
-    const ref = await db.collection(`Items/${currentDate}/items`);
+    const ref = await db.collection(`Items/${currentDate}/items`).where("categoryNode", "==", node);
     ref.onSnapshot((res) => {
       this.itemDB = res;
     });
@@ -192,7 +192,6 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
     let isFirstLoad = true;
     let isExistTodayLog = false;
     console.log("start");
-    await itemsData.stream();
     await logsData.stream();
     const logRef = await db.collection(`Logs/${currentDate}/Logs`);
     const capabilities = import_selenium_webdriver.default.Capabilities.chrome();
@@ -216,6 +215,7 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
     }
     for (let j = isFirstLoad && isExistTodayLog ? keywords.findIndex((el) => el === checkLogData.searchText) : 0; j < keywords.length; j++) {
       for (let t = isFirstLoad && isExistTodayLog ? categories.findIndex((el) => el.code === checkLogData.categoryNode) : 0; t < categories.length; t++) {
+        await itemsData.stream({ node: categories[t].code });
         let pageNum = isFirstLoad && isExistTodayLog ? checkLogData.pageNum : 1;
         while (pageNum < 1e3) {
           const currentLatestLog = logsData.getLatestDoc() || {};
@@ -277,7 +277,6 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
             if (el.length) {
               const asin = await driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ")")).getAttribute("data-asin");
               const priceExist = await driver2[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole"));
-              console.log("priceExist=>", priceExist);
               if (!((_b = itemsData.getDocById(asin)) == null ? void 0 : _b.id) && priceExist.length) {
                 result.priceInJp = await driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole")).getText();
                 const title = driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a"));
@@ -293,6 +292,7 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
                 result.id = asin;
                 result.linkInUS = "https://amazon.com/dp/" + asin;
                 result.keyword = putKeyword;
+                result.categoryNode = node;
                 result.created_at = today;
                 result.category = categories[t].keyword;
                 result.accessId = accessId;
