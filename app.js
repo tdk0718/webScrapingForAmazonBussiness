@@ -24,10 +24,28 @@ import { sort } from 'fast-sort'
 
 const db = Firebase.firestore(app)
 
+const current = new Date()
+const currentDate = current.getFullYear() + '-' + (current.getMonth() + 1) + '-' + current.getDate()
+
+//TODO 新しいランダムIDを生成する関数
+function createNewAccessId() {
+  const LENGTH = 20 // 生成したい文字列の長さ
+  const SOURCE = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUWXYZ0123456789' // 元になる文字
+  let NewId = ''
+  for (let i = 0; i < LENGTH; i++) {
+    NewId += SOURCE[Math.floor(Math.random() * SOURCE.length)]
+  }
+  return NewId
+}
+
 const itemsData = {
   itemDB: [],
   async stream() {
-    const ref = await db.collection('Items')
+    await db
+      .collection('Items')
+      .doc(currentDate)
+      .set({ created_at: current })
+    const ref = await db.collection(`Items/${currentDate}/items`)
     ref.onSnapshot(res => {
       this.itemDB = res
     })
@@ -72,7 +90,11 @@ const categoriesData = {
 const logsData = {
   logDB: [],
   async stream() {
-    const ref = await db.collection('Logs')
+    await db
+      .collection('Logs')
+      .doc(currentDate)
+      .set({ created_at: current })
+    const ref = await db.collection(`Logs/${currentDate}/Logs`)
     ref.onSnapshot(res => {
       this.logDB = res
     })
@@ -205,6 +227,7 @@ const keywordData = {
 const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外', '北米', '国名', '日本未発売']
 
 ;(async () => {
+  const accessId = createNewAccessId()
   let isFirstLoad = true
   let isExistTodayLog = false
 
@@ -213,7 +236,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
   // await categoriesData.stream()
   await logsData.stream()
 
-  const logRef = await db.collection('Logs')
+  const logRef = await db.collection(`Logs/${currentDate}/Logs`)
   const capabilities = webdriver.Capabilities.chrome()
   capabilities.set('chromeOptions', {
     args: ['--headless', '--no-sandbox', '--disable-gpu', `--window-size=1980,1200`],
@@ -223,7 +246,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
   driver[2] = await new Builder().withCapabilities(capabilities).build()
   driver[3] = await new Builder().withCapabilities(capabilities).build()
 
-  const ref = await db.collection('Items')
+  const ref = await db.collection(`Items/${currentDate}/Items`)
   const items = await ref.get()
 
   let logsDataObj
@@ -273,11 +296,17 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
           j = currentLatestLog.searchTextIndex
           t = currentLatestLog.nodeIndex
           pageNum = currentLatestLog.pageNum
+          if (currentLatestLog.accessId !== currentLatestLog) {
+            pageNum = currentLatestLog.pageNum + 1
+          }
         }
 
         if (j === currentLatestLog.searchTextIndex && currentLatestLog.nodeIndex > t) {
           t = currentLatestLog.nodeIndex
           pageNum = currentLatestLog.pageNum
+          if (currentLatestLog.accessId !== currentLatestLog) {
+            pageNum = currentLatestLog.pageNum + 1
+          }
         }
         if (
           j === currentLatestLog.searchTextIndex &&
@@ -285,6 +314,9 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
           currentLatestLog.pageNum > pageNum
         ) {
           pageNum = currentLatestLog.pageNum
+          if (currentLatestLog.accessId !== currentLatestLog) {
+            pageNum = currentLatestLog.pageNum + 1
+          }
         }
 
         const putKeyword = keywords[j]
@@ -299,11 +331,19 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
             'https://www.amazon.co.jp/s?k=' + putKeyword + '&page=' + pageNum + '&node=' + node
           )
         }
+        if (pageNum !== 1 && isFirstLoad) {
+          driver[((pageNum + 2) % 3) + 1].get(
+            'https://www.amazon.co.jp/s?k=' + putKeyword + '&page=' + pageNum + '&node=' + node
+          )
+          driver[((pageNum + 3) % 3) + 1].get(
+            'https://www.amazon.co.jp/s?k=' + putKeyword + '&page=' + pageNum + '&node=' + node
+          )
+        }
         driver[((pageNum + 1) % 3) + 1].get(
           'https://www.amazon.co.jp/s?k=' + putKeyword + '&page=' + (pageNum + 1) + '&node=' + node
         )
 
-        await driver[n].wait(until.elementLocated(By.id('search')), 10000)
+        await driver[n].wait(until.elementLocated(By.id('search')), 50000)
 
         const numPerPage = await driver[n].findElements(By.css('.s-result-item.s-asin'))
 
@@ -426,6 +466,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
               nodeIndex: t,
               searchText: putKeyword,
               searchTextIndex: j,
+              accessId,
             }
             await logRef.doc().set(logInfo)
           }
