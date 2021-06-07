@@ -277,43 +277,46 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
             if (el.length) {
               const asin = await driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ")")).getAttribute("data-asin");
               const priceExist = await driver2[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole"));
-              if (!((_b = itemsData.getDocById(asin)) == null ? void 0 : _b.id) && priceExist.length) {
-                result.priceInJp = await driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole")).getText();
-                const title = driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a"));
-                const text = await title.getText();
-                result.title = text;
-                const href = await driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a")).getAttribute("href");
-                result.link = "https://amazon.co.jp" + href;
-                if (await driver2[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") img.s-image"))) {
-                  const src = await driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") img.s-image")).getAttribute("src");
-                  result.imageLink = src;
+              if (priceExist.length) {
+                let priceInJp = await driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole")).getText();
+                priceInJp = priceInJp.replace(/,/g, "");
+                if (Number(priceInJp) > 3e3 && !((_b = itemsData.getDocById(asin)) == null ? void 0 : _b.id)) {
+                  result.priceInJp = Number(priceInJp);
+                  const title = driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a"));
+                  const text = await title.getText();
+                  result.title = text;
+                  const href = await driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a")).getAttribute("href");
+                  result.link = "https://amazon.co.jp" + href;
+                  if (await driver2[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") img.s-image"))) {
+                    const src = await driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") img.s-image")).getAttribute("src");
+                    result.imageLink = src;
+                  }
+                  result.asin = asin;
+                  result.id = asin;
+                  result.linkInUS = "https://amazon.com/dp/" + asin;
+                  result.keyword = putKeyword;
+                  result.categoryNode = node;
+                  result.created_at = today;
+                  result.category = categories[t].keyword;
+                  result.accessId = accessId;
+                  await ref.doc(result.asin).set(result);
+                  console.log(result);
+                  console.log(itemsData.getDocs().length);
                 }
-                result.asin = asin;
-                result.id = asin;
-                result.linkInUS = "https://amazon.com/dp/" + asin;
-                result.keyword = putKeyword;
-                result.categoryNode = node;
-                result.created_at = today;
-                result.category = categories[t].keyword;
-                result.accessId = accessId;
-                await ref.doc(result.asin).set(result);
-                console.log(result);
-                console.log(itemsData.getDocs().length);
               }
               isFirstLoad = false;
-              const logInfo = {
-                created_at: today,
-                pageNum,
-                itemNumAtPage: i,
-                categoryNode: node,
-                nodeIndex: t,
-                searchText: putKeyword,
-                searchTextIndex: j,
-                accessId
-              };
-              await logRef.doc().set(logInfo);
             }
           }
+          const logInfo = {
+            created_at: new Date(),
+            pageNum,
+            categoryNode: node,
+            nodeIndex: t,
+            searchText: putKeyword,
+            searchTextIndex: j,
+            accessId
+          };
+          await logRef.doc().set(logInfo);
           pageNum += 1;
         }
       }

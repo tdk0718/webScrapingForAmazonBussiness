@@ -409,66 +409,71 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                 By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
               )
 
-              if (!itemsData.getDocById(asin)?.id && priceExist.length) {
-                result.priceInJp = await driver[n]
+              if (priceExist.length) {
+                let priceInJp = await driver[n]
                   .findElement(
                     By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
                   )
                   .getText()
-                const title = driver[n].findElement(
-                  By.css('.s-result-item.s-asin:nth-child(' + i + ') h2.a-color-base > a')
-                )
-                const text = await title.getText()
-                result.title = text
-                const href = await driver[n]
-                  .findElement(
+                priceInJp = priceInJp.replace(/,/g, '')
+                if (Number(priceInJp) > 3000 && !itemsData.getDocById(asin)?.id) {
+                  result.priceInJp = Number(priceInJp)
+                  const title = driver[n].findElement(
                     By.css('.s-result-item.s-asin:nth-child(' + i + ') h2.a-color-base > a')
                   )
-                  .getAttribute('href')
+                  const text = await title.getText()
+                  result.title = text
+                  const href = await driver[n]
+                    .findElement(
+                      By.css('.s-result-item.s-asin:nth-child(' + i + ') h2.a-color-base > a')
+                    )
+                    .getAttribute('href')
 
-                result.link = 'https://amazon.co.jp' + href
+                  result.link = 'https://amazon.co.jp' + href
 
-                if (
-                  await driver[n].findElements(
-                    By.css('.s-result-item.s-asin:nth-child(' + i + ') img.s-image')
-                  )
-                ) {
-                  const src = await driver[n]
-                    .findElement(By.css('.s-result-item.s-asin:nth-child(' + i + ') img.s-image'))
-                    .getAttribute('src')
-                  result.imageLink = src
+                  if (
+                    await driver[n].findElements(
+                      By.css('.s-result-item.s-asin:nth-child(' + i + ') img.s-image')
+                    )
+                  ) {
+                    const src = await driver[n]
+                      .findElement(By.css('.s-result-item.s-asin:nth-child(' + i + ') img.s-image'))
+                      .getAttribute('src')
+                    result.imageLink = src
+                  }
+
+                  result.asin = asin
+                  result.id = asin
+                  result.linkInUS = 'https://amazon.com/dp/' + asin
+                  result.keyword = putKeyword
+                  result.categoryNode = node
+
+                  // Call eachItemInfoAtUsa(n, driver02)
+
+                  result.created_at = today
+                  result.category = categories[t].keyword
+                  result.accessId = accessId
+
+                  await ref.doc(result.asin).set(result)
+                  console.log(result)
+                  console.log(itemsData.getDocs().length)
                 }
-
-                result.asin = asin
-                result.id = asin
-                result.linkInUS = 'https://amazon.com/dp/' + asin
-                result.keyword = putKeyword
-                result.categoryNode = node
-
-                // Call eachItemInfoAtUsa(n, driver02)
-
-                result.created_at = today
-                result.category = categories[t].keyword
-                result.accessId = accessId
-
-                await ref.doc(result.asin).set(result)
-                console.log(result)
-                console.log(itemsData.getDocs().length)
               }
               isFirstLoad = false
-              const logInfo = {
-                created_at: today,
-                pageNum,
-                itemNumAtPage: i,
-                categoryNode: node,
-                nodeIndex: t,
-                searchText: putKeyword,
-                searchTextIndex: j,
-                accessId,
-              }
-              await logRef.doc().set(logInfo)
             }
           }
+
+          const logInfo = {
+            created_at: new Date(),
+            pageNum,
+            // itemNumAtPage: i,
+            categoryNode: node,
+            nodeIndex: t,
+            searchText: putKeyword,
+            searchTextIndex: j,
+            accessId,
+          }
+          await logRef.doc().set(logInfo)
 
           pageNum += 1
         }
@@ -486,9 +491,6 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
     driver[3].quit()
   } catch (err) {
     console.log(err)
-    driver[1].quit()
-    driver[2].quit()
-    driver[3].quit()
   }
 
   return
