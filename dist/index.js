@@ -187,139 +187,147 @@ var categories = [
 var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u30F3\u30DD\u30FC\u30C8", "\u6D77\u5916", "\u5317\u7C73", "\u56FD\u540D", "\u65E5\u672C\u672A\u767A\u58F2"];
 (async () => {
   var _a, _b;
-  const accessId = createNewAccessId();
-  let isFirstLoad = true;
-  let isExistTodayLog = false;
-  console.log("start");
-  await itemsData.stream();
-  await logsData.stream();
-  const logRef = await db.collection(`Logs/${currentDate}/Logs`);
-  const capabilities = import_selenium_webdriver.default.Capabilities.chrome();
-  capabilities.set("chromeOptions", {
-    args: ["--headless", "--no-sandbox", "--disable-gpu", `--window-size=1980,1200`]
-  });
-  const driver = [];
-  driver[1] = await new Builder().withCapabilities(capabilities).build();
-  driver[2] = await new Builder().withCapabilities(capabilities).build();
-  driver[3] = await new Builder().withCapabilities(capabilities).build();
-  const ref = await db.collection(`Items/${currentDate}/Items`);
-  const items = await ref.get();
-  let logsDataObj;
-  logsDataObj = logsData.getLatestDoc();
-  const latestLogDate = ((_a = logsDataObj == null ? void 0 : logsDataObj.created_at) == null ? void 0 : _a.seconds) ? new Date(logsDataObj.created_at.seconds * 1e3) : new Date(0);
-  const now = new Date();
-  let checkLogData = {};
-  if (latestLogDate.getFullYear() + "-" + latestLogDate.getFullYear() + "-" + latestLogDate.getDate() === now.getFullYear() + "-" + now.getFullYear() + "-" + now.getDate()) {
-    isExistTodayLog = true;
-    checkLogData = latestLogDate;
-  }
-  for (let j = isFirstLoad && isExistTodayLog ? keywords.findIndex((el) => el === checkLogData.searchText) : 0; j < keywords.length; j++) {
-    for (let t = isFirstLoad && isExistTodayLog ? categories.findIndex((el) => el.code === checkLogData.categoryNode) : 0; t < categories.length; t++) {
-      let pageNum = isFirstLoad && isExistTodayLog ? checkLogData.pageNum : 1;
-      while (pageNum < 1e3) {
-        const currentLatestLog = logsData.getLatestDoc() || {};
-        if (j > currentLatestLog.searchTextIndex) {
-          j = currentLatestLog.searchTextIndex;
-          t = currentLatestLog.nodeIndex;
-          pageNum = currentLatestLog.pageNum;
-          if (currentLatestLog.accessId !== currentLatestLog) {
-            pageNum = currentLatestLog.pageNum + 1;
-          }
-        }
-        if (j === currentLatestLog.searchTextIndex && currentLatestLog.nodeIndex > t) {
-          t = currentLatestLog.nodeIndex;
-          pageNum = currentLatestLog.pageNum;
-          if (currentLatestLog.accessId !== currentLatestLog) {
-            pageNum = currentLatestLog.pageNum + 1;
-          }
-        }
-        if (j === currentLatestLog.searchTextIndex && currentLatestLog.nodeIndex > t && currentLatestLog.pageNum > pageNum) {
-          pageNum = currentLatestLog.pageNum;
-          if (currentLatestLog.accessId !== currentLatestLog) {
-            pageNum = currentLatestLog.pageNum + 1;
-          }
-        }
-        const putKeyword = keywords[j];
-        const node = categories[t].code;
-        const n = (pageNum + 2) % 3 + 1;
-        console.log(n);
-        if (pageNum === 1) {
-          driver[1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
-          driver[2].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
-        }
-        if (pageNum !== 1 && isFirstLoad) {
-          driver[(pageNum + 2) % 3 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
-          driver[(pageNum + 3) % 3 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
-        }
-        driver[(pageNum + 1) % 3 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + (pageNum + 1) + "&node=" + node);
-        await driver[n].wait(until.elementLocated(By.id("search")), 5e4);
-        const numPerPage = await driver[n].findElements(By.css(".s-result-item.s-asin"));
-        const pageOverFlow = await driver[n].findElement(By.css(".sg-col-14-of-20.sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)")).getText();
-        const pageOverFlowArray = pageOverFlow.replace(" \u4EE5\u4E0A", "").split(" ");
-        console.log(pageOverFlowArray);
-        if (pageOverFlowArray[3]) {
-          const currentNum = Number(pageOverFlowArray[3].split("-")[0].replace(",", ""));
-          console.log(pageOverFlowArray[3].split("-")[1]);
-          const limitNum = Number(pageOverFlowArray[3].split("-")[1].replace("\u4EF6", "").replace(",", ""));
-          console.log(pageOverFlow);
-          console.log(pageOverFlowArray[3]);
-          console.log(currentNum, limitNum);
-          if (currentNum > limitNum)
-            break;
-        }
-        for (let i = 1; i <= numPerPage.length; i++) {
-          const currentLatestLog2 = logsData.getLatestDoc() || {};
-          let result = {};
-          const el = await driver[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-size-base-plus.a-color-base.a-text-normal"));
-          console.log(i);
-          const today = new Date();
-          if (el.length) {
-            const asin = await driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ")")).getAttribute("data-asin");
-            if (!((_b = itemsData.getDocById(asin)) == null ? void 0 : _b.id)) {
-              const title = driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-size-mini.a-spacing-none.a-color-base.s-line-clamp-4 > a"));
-              const text = await title.getText();
-              result.title = text;
-              const href = await driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-size-mini.a-spacing-none.a-color-base.s-line-clamp-4 > a")).getAttribute("href");
-              result.link = "https://amazon.co.jp" + href;
-              if (await driver[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") img.s-image"))) {
-                const src = await driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") img.s-image")).getAttribute("src");
-                result.imageLink = src;
-              }
-              const priceExist = await driver[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole"));
-              if (priceExist.length) {
-                result.priceInJp = await driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole")).getText();
-              }
-              result.asin = asin;
-              result.id = asin;
-              result.linkInUS = "https://amazon.com/dp/" + asin;
-              result.keyword = putKeyword;
-              result.created_at = today;
-              result.category = categories[t].keyword;
-              await ref.doc(result.asin).set(result);
-              console.log(result);
-              console.log(itemsData.getDocs().length);
+  try {
+    const accessId = createNewAccessId();
+    let isFirstLoad = true;
+    let isExistTodayLog = false;
+    console.log("start");
+    await itemsData.stream();
+    await logsData.stream();
+    const logRef = await db.collection(`Logs/${currentDate}/Logs`);
+    const capabilities = import_selenium_webdriver.default.Capabilities.chrome();
+    capabilities.set("chromeOptions", {
+      args: ["--headless", "--no-sandbox", "--disable-gpu", `--window-size=1980,1200`]
+    });
+    const driver2 = [];
+    driver2[1] = await new Builder().withCapabilities(capabilities).build();
+    driver2[2] = await new Builder().withCapabilities(capabilities).build();
+    driver2[3] = await new Builder().withCapabilities(capabilities).build();
+    const ref = await db.collection(`Items/${currentDate}/Items`);
+    const items = await ref.get();
+    let logsDataObj;
+    logsDataObj = logsData.getLatestDoc();
+    const latestLogDate = ((_a = logsDataObj == null ? void 0 : logsDataObj.created_at) == null ? void 0 : _a.seconds) ? new Date(logsDataObj.created_at.seconds * 1e3) : new Date(0);
+    const now = new Date();
+    let checkLogData = {};
+    if (latestLogDate.getFullYear() + "-" + latestLogDate.getFullYear() + "-" + latestLogDate.getDate() === now.getFullYear() + "-" + now.getFullYear() + "-" + now.getDate()) {
+      isExistTodayLog = true;
+      checkLogData = latestLogDate;
+    }
+    for (let j = isFirstLoad && isExistTodayLog ? keywords.findIndex((el) => el === checkLogData.searchText) : 0; j < keywords.length; j++) {
+      for (let t = isFirstLoad && isExistTodayLog ? categories.findIndex((el) => el.code === checkLogData.categoryNode) : 0; t < categories.length; t++) {
+        let pageNum = isFirstLoad && isExistTodayLog ? checkLogData.pageNum : 1;
+        while (pageNum < 1e3) {
+          const currentLatestLog = logsData.getLatestDoc() || {};
+          if (j > currentLatestLog.searchTextIndex) {
+            j = currentLatestLog.searchTextIndex;
+            t = currentLatestLog.nodeIndex;
+            pageNum = currentLatestLog.pageNum;
+            if (currentLatestLog.accessId !== currentLatestLog) {
+              pageNum = currentLatestLog.pageNum + 1;
             }
-            isFirstLoad = false;
-            const logInfo = {
-              created_at: today,
-              pageNum,
-              itemNumAtPage: i,
-              categoryNode: node,
-              nodeIndex: t,
-              searchText: putKeyword,
-              searchTextIndex: j,
-              accessId
-            };
-            await logRef.doc().set(logInfo);
           }
+          if (j === currentLatestLog.searchTextIndex && currentLatestLog.nodeIndex > t) {
+            t = currentLatestLog.nodeIndex;
+            pageNum = currentLatestLog.pageNum;
+            if (currentLatestLog.accessId !== currentLatestLog) {
+              pageNum = currentLatestLog.pageNum + 1;
+            }
+          }
+          if (j === currentLatestLog.searchTextIndex && currentLatestLog.nodeIndex > t && currentLatestLog.pageNum > pageNum) {
+            pageNum = currentLatestLog.pageNum;
+            if (currentLatestLog.accessId !== currentLatestLog) {
+              pageNum = currentLatestLog.pageNum + 1;
+            }
+          }
+          const putKeyword = keywords[j];
+          const node = categories[t].code;
+          const n = (pageNum + 2) % 3 + 1;
+          console.log(n);
+          if (pageNum === 1) {
+            driver2[1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
+            driver2[2].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
+          }
+          if (pageNum !== 1 && isFirstLoad) {
+            driver2[(pageNum + 2) % 3 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
+            driver2[(pageNum + 3) % 3 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
+          }
+          driver2[(pageNum + 1) % 3 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + (pageNum + 1) + "&node=" + node);
+          await driver2[n].wait(until.elementLocated(By.id("search")), 5e4);
+          const numPerPage = await driver2[n].findElements(By.css(".s-result-item.s-asin"));
+          const pageOverFlow = await driver2[n].findElement(By.css(".sg-col-14-of-20.sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)")).getText();
+          const pageOverFlowArray = pageOverFlow.replace(" \u4EE5\u4E0A", "").split(" ");
+          console.log(pageOverFlowArray);
+          if (pageOverFlowArray[3]) {
+            const currentNum = Number(pageOverFlowArray[3].split("-")[0].replace(",", ""));
+            console.log(pageOverFlowArray[3].split("-")[1]);
+            const limitNum = Number(pageOverFlowArray[3].split("-")[1].replace("\u4EF6", "").replace(",", ""));
+            console.log(pageOverFlow);
+            console.log(pageOverFlowArray[3]);
+            console.log(currentNum, limitNum);
+            if (currentNum > limitNum)
+              break;
+          }
+          for (let i = 1; i <= numPerPage.length; i++) {
+            const currentLatestLog2 = logsData.getLatestDoc() || {};
+            let result = {};
+            const el = await driver2[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-size-base-plus.a-color-base.a-text-normal"));
+            console.log(i);
+            const today = new Date();
+            if (el.length) {
+              const asin = await driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ")")).getAttribute("data-asin");
+              if (!((_b = itemsData.getDocById(asin)) == null ? void 0 : _b.id)) {
+                const title = driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-size-mini.a-spacing-none.a-color-base.s-line-clamp-4 > a"));
+                const text = await title.getText();
+                result.title = text;
+                const href = await driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-size-mini.a-spacing-none.a-color-base.s-line-clamp-4 > a")).getAttribute("href");
+                result.link = "https://amazon.co.jp" + href;
+                if (await driver2[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") img.s-image"))) {
+                  const src = await driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") img.s-image")).getAttribute("src");
+                  result.imageLink = src;
+                }
+                const priceExist = await driver2[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole"));
+                if (priceExist.length) {
+                  result.priceInJp = await driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole")).getText();
+                  result.asin = asin;
+                  result.id = asin;
+                  result.linkInUS = "https://amazon.com/dp/" + asin;
+                  result.keyword = putKeyword;
+                  result.created_at = today;
+                  result.category = categories[t].keyword;
+                  result.accessId = accessId;
+                  await ref.doc(result.asin).set(result);
+                  console.log(result);
+                  console.log(itemsData.getDocs().length);
+                }
+              }
+              isFirstLoad = false;
+              const logInfo = {
+                created_at: today,
+                pageNum,
+                itemNumAtPage: i,
+                categoryNode: node,
+                nodeIndex: t,
+                searchText: putKeyword,
+                searchTextIndex: j,
+                accessId
+              };
+              await logRef.doc().set(logInfo);
+            }
+          }
+          pageNum += 1;
         }
-        pageNum += 1;
       }
     }
+    console.log("fin");
+    driver2[1].quit();
+    driver2[2].quit();
+    driver2[3].quit();
+  } catch (err) {
+    console.log(err);
+    driver[1].quit();
+    driver[2].quit();
+    driver[3].quit();
   }
-  console.log("fin");
-  driver[1].quit();
-  driver[2].quit();
-  driver[3].quit();
   return;
 })();
