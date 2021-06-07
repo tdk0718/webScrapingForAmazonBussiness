@@ -52,9 +52,9 @@ function createNewAccessId() {
 var itemsData = {
   itemDB: [],
   async stream({ node }) {
+    console.log(node);
     await db.collection("Items").doc(currentDate).set({ created_at: current });
-    const ref = await db.collection(`Items/${currentDate}/items`).where("categoryNode", "==", node);
-    ref.onSnapshot((res) => {
+    await db.collection(`Items/${currentDate}/Items`).where("categoryNode", "==", node).onSnapshot((res) => {
       this.itemDB = res;
     });
   },
@@ -80,10 +80,8 @@ var logsData = {
   logDB: [],
   async stream() {
     await db.collection("Logs").doc(currentDate).set({ created_at: current });
-    const ref = await db.collection(`Logs/${currentDate}/Logs`);
-    ref.onSnapshot((res) => {
-      this.logDB = res;
-    });
+    const res = await db.collection(`Logs/${currentDate}/Logs`).get();
+    this.logDB = res;
   },
   async getDocs() {
     const result = [];
@@ -186,7 +184,7 @@ var categories = [
 ];
 var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u30F3\u30DD\u30FC\u30C8", "\u6D77\u5916", "\u5317\u7C73", "\u56FD\u540D", "\u65E5\u672C\u672A\u767A\u58F2"];
 (async () => {
-  var _a, _b;
+  var _a, _b, _c;
   try {
     const accessId = createNewAccessId();
     let isFirstLoad = true;
@@ -203,7 +201,6 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
     driver[2] = await new Builder().withCapabilities(capabilities).build();
     driver[3] = await new Builder().withCapabilities(capabilities).build();
     const ref = await db.collection(`Items/${currentDate}/Items`);
-    const items = await ref.get();
     let logsDataObj;
     logsDataObj = logsData.getLatestDoc();
     const latestLogDate = ((_a = logsDataObj == null ? void 0 : logsDataObj.created_at) == null ? void 0 : _a.seconds) ? new Date(logsDataObj.created_at.seconds * 1e3) : new Date(0);
@@ -255,19 +252,22 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
           driver[(pageNum + 1) % 3 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + (pageNum + 1) + "&node=" + node);
           await driver[n].wait(until.elementLocated(By.id("search")), 5e4);
           const numPerPage = await driver[n].findElements(By.css(".s-result-item.s-asin"));
-          const pageOverFlow = await driver[n].findElement(By.css(".sg-col-14-of-20.sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)")).getText();
-          const pageOverFlowArray = pageOverFlow.replace(" \u4EE5\u4E0A", "").split(" ");
+          const pageOverFlowExist = await driver[n].findElements(By.css(".sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)"));
+          let pageOverFlow = "";
+          if (pageOverFlowExist.length) {
+            pageOverFlow = await driver[n].findElement(By.css(".sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)")).getText();
+          }
+          const pageOverFlowArray = (_b = pageOverFlow == null ? void 0 : pageOverFlow.replace(" \u4EE5\u4E0A", "")) == null ? void 0 : _b.split(" ");
           console.log(pageOverFlowArray);
           if (pageOverFlowArray[3]) {
             const currentNum = Number(pageOverFlowArray[3].split("-")[0].replace(",", ""));
             console.log(pageOverFlowArray[3].split("-")[1]);
             const limitNum = Number(pageOverFlowArray[3].split("-")[1].replace("\u4EF6", "").replace(",", ""));
-            console.log(pageOverFlow);
-            console.log(pageOverFlowArray[3]);
-            console.log(currentNum, limitNum);
             if (currentNum > limitNum)
               break;
           }
+          if (!pageOverFlow)
+            break;
           for (let i = 1; i <= numPerPage.length; i++) {
             const currentLatestLog2 = logsData.getLatestDoc() || {};
             let result = {};
@@ -280,8 +280,7 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
               if (priceExist.length) {
                 let priceInJp = await driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole")).getText();
                 priceInJp = priceInJp.replace(/,/g, "").replace("\uFFE5", "");
-                console.log(priceInJp);
-                if (Number(priceInJp) > 3e3 && !((_b = itemsData.getDocById(asin)) == null ? void 0 : _b.id)) {
+                if (Number(priceInJp) > 3e3 && !((_c = itemsData.getDocById(asin)) == null ? void 0 : _c.id)) {
                   result.priceInJp = Number(priceInJp);
                   const title = driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a"));
                   const text = await title.getText();
@@ -300,9 +299,10 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
                   result.created_at = today;
                   result.category = categories[t].keyword;
                   result.accessId = accessId;
+                  result.priceInUS = "";
                   await ref.doc(result.asin).set(result);
                   console.log(result);
-                  console.log(itemsData.getDocs().length);
+                  console.log("num=>", itemsData.getDocs().length);
                 }
               }
               isFirstLoad = false;

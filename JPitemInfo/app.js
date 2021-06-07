@@ -41,21 +41,24 @@ function createNewAccessId() {
 const itemsData = {
   itemDB: [],
   async stream({ node }) {
+    console.log(node)
     await db
       .collection('Items')
       .doc(currentDate)
       .set({ created_at: current })
-    const ref = await db.collection(`Items/${currentDate}/items`).where('categoryNode', '==', node)
-    ref.onSnapshot(res => {
-      this.itemDB = res
-    })
+    await db
+      .collection(`Items/${currentDate}/Items`)
+      .where('categoryNode', '==', node)
+      .onSnapshot(res => {
+        this.itemDB = res
+      })
   },
   getDocs() {
     const result = []
-
     this.itemDB.forEach(el => {
       result.push(el.data())
     })
+
     return result
   },
   getDocById(id) {
@@ -94,10 +97,8 @@ const logsData = {
       .collection('Logs')
       .doc(currentDate)
       .set({ created_at: current })
-    const ref = await db.collection(`Logs/${currentDate}/Logs`)
-    ref.onSnapshot(res => {
-      this.logDB = res
-    })
+    const res = await db.collection(`Logs/${currentDate}/Logs`).get()
+    this.logDB = res
   },
   async getDocs() {
     const result = []
@@ -248,7 +249,6 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
     driver[3] = await new Builder().withCapabilities(capabilities).build()
 
     const ref = await db.collection(`Items/${currentDate}/Items`)
-    const items = await ref.get()
 
     let logsDataObj
 
@@ -356,15 +356,23 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
 
           const numPerPage = await driver[n].findElements(By.css('.s-result-item.s-asin'))
 
-          const pageOverFlow = await driver[n]
-            .findElement(
-              By.css(
-                '.sg-col-14-of-20.sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)'
-              )
+          const pageOverFlowExist = await driver[n].findElements(
+            By.css(
+              '.sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)'
             )
-            .getText()
+          )
 
-          const pageOverFlowArray = pageOverFlow.replace(' 以上', '').split(' ')
+          let pageOverFlow = ''
+          if (pageOverFlowExist.length) {
+            pageOverFlow = await driver[n]
+              .findElement(
+                By.css(
+                  '.sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)'
+                )
+              )
+              .getText()
+          }
+          const pageOverFlowArray = pageOverFlow?.replace(' 以上', '')?.split(' ')
 
           // 検索結果 20,000 以上 のうち 49-72件 "並行輸入"
           console.log(pageOverFlowArray)
@@ -378,11 +386,10 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                 .replace('件', '')
                 .replace(',', '')
             )
-            console.log(pageOverFlow)
-            console.log(pageOverFlowArray[3])
-            console.log(currentNum, limitNum)
+
             if (currentNum > limitNum) break
           }
+          if (!pageOverFlow) break
 
           for (let i = 1; i <= numPerPage.length; i++) {
             const currentLatestLog = logsData.getLatestDoc() || {}
@@ -416,7 +423,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                   )
                   .getText()
                 priceInJp = priceInJp.replace(/,/g, '').replace('￥', '')
-                console.log(priceInJp)
+
                 if (Number(priceInJp) > 3000 && !itemsData.getDocById(asin)?.id) {
                   result.priceInJp = Number(priceInJp)
                   const title = driver[n].findElement(
@@ -457,8 +464,9 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                   result.priceInUS = ''
 
                   await ref.doc(result.asin).set(result)
+
                   console.log(result)
-                  console.log(itemsData.getDocs().length)
+                  console.log('num=>', itemsData.getDocs().length)
                 }
               }
               isFirstLoad = false

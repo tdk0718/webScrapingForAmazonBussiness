@@ -29,15 +29,17 @@ const currentDate = current.getFullYear() + '-' + (current.getMonth() + 1) + '-'
 
 const itemsData = {
   itemDB: [],
-  async stream({ node }) {
+  async stream() {
     await db
       .collection('Items')
       .doc(currentDate)
       .set({ created_at: current })
-    const ref = await db.collection(`Items/${currentDate}/items`).where('priceInUS', '==', '')
-    ref.onSnapshot(res => {
-      this.itemDB = res
-    })
+    const res = await db
+      .collection(`Items/${currentDate}/Items`)
+      .where('priceInUS', '==', '')
+      .onSnapshot(res => {
+        this.itemDB = res
+      })
   },
   getDocs() {
     const result = []
@@ -47,28 +49,37 @@ const itemsData = {
     })
     return result
   },
-  getDocById(id) {
-    const docs = this.getDocs()
-    return docs.find(el => el.asin === id)
-  },
   isHaveId(id) {
     const docs = this.getDocs()
-    if (docs.find(el => el.asin === id)) return true
+    if (docs.find(el => el.id === id)) return true
     return false
   },
 }
 
 ;(async () => {
   try {
-    await itemDB.stream()
+    await itemsData.stream()
     let isAllFin = false
-    const itemDataArray = itemDB.getDocs()
 
-    while (!isAllFin) {
-      console.log(itemDataArray[0])
-    }
+    // const capabilities = webdriver.Capabilities.chrome()
+    // capabilities.set('chromeOptions', {
+    //   args: ['--headless', '--no-sandbox', '--disable-gpu', `--window-size=1980,1200`],
+    // })
+    // const driver = []
+    // for (let d = 1; d <= 2; d++) {
+    //   driver[d] = await new Builder().withCapabilities(capabilities).build()
+    //   await driver[d].get('https://www.amazon.com/')
+    //   await driver[d].wait(until.elementLocated(By.id('nav-search-bar-form')), 50000)
+    // }
+
+    let itemDataArray = []
+
+    // while (!isAllFin) {
+    itemDataArray = itemsData.getDocs()
+    console.log('itemDataArray=>', itemDataArray)
+    // }
   } catch (err) {
-    console.log(err)
+    console.log('err=>', err)
   }
 
   return
