@@ -27,19 +27,87 @@ const db = Firebase.firestore(app)
 const current = new Date()
 const currentDate = current.getFullYear() + '-' + (current.getMonth() + 1) + '-' + current.getDate()
 
+async function getEachInfoInUs(driver, info) {
+  await driver.get(info.linkInUS)
+
+  await driver.wait(until.elementLocated(By.id('nav-logo-sprites')), 50000)
+
+  const noImg = await driver.findElements(By.css('#g > div > a > img'))
+  if (noImg.length) {
+    const ref = await db
+      .collection(`Items/${currentDate}/Items`)
+      .doc(info.id)
+      .update({ priceInUS: null })
+  } else {
+    const titleExist = await driver.findElements(By.id('productTitle'))
+    console.log(titleExist)
+
+    if (titleExist.length) {
+      const USTitle = await driver.findElement(By.id('productTitle')).getText()
+      console.log(USTitle)
+      let priceInUS = null
+      const priceExist01 = await driver.findElements(By.id('price'))
+      if (priceExist01.length) {
+        priceInUS = await driver.findElement(By.id('price')).getText()
+      }
+      const priceExist02 = await driver.findElements(By.id('price_inside_buybox'))
+
+      if (priceExist02.length) {
+        priceInUS = await driver.findElement(By.id('price_inside_buybox')).getText()
+      }
+
+      priceInUS = Number(priceInUS?.replace('$', ''))
+      let priceInUSToYen = 0
+      let priceDeff = 0
+
+      if (priceInUS) {
+        priceInUSToYen = priceInUS * 110
+        priceDeff = info.priceInJp - priceInUSToYen
+      }
+      const ref = await db
+        .collection(`Items/${currentDate}/Items`)
+        .doc(info.id)
+        .update({ priceInUSToYen, priceDeff, priceInUS, USTitle })
+    } else {
+      const ref = await db
+        .collection(`Items/${currentDate}/Items`)
+        .doc(info.id)
+        .update({ priceInUS: null })
+    }
+  }
+  return
+}
+
 const itemsData = {
   itemDB: [],
   async stream() {
-    await db
-      .collection('Items')
-      .doc(currentDate)
-      .set({ created_at: current })
-    const res = await db
-      .collection(`Items/${currentDate}/Items`)
-      .where('priceInUS', '==', '')
-      .onSnapshot(res => {
-        this.itemDB = res
-      })
+    return new Promise(async (resolve, reject) => {
+      await db
+        .collection('Items')
+        .doc(currentDate)
+        .set({ created_at: current })
+      const getRes = await db
+        .collection(`Items/${currentDate}/Items`)
+        .where('priceInUS', '==', '')
+        .get()
+      const res = await db
+        .collection(`Items/${currentDate}/Items`)
+        .where('priceInUS', '==', '')
+        .onSnapshot(res => {
+          const result = []
+          res.forEach(e => {
+            result.push(e.data())
+          })
+          const result02 = []
+          this.itemDB = result.length ? res : getRes
+          this.itemDB.forEach(e => {
+            result02.push(e.data())
+          })
+          if (result02) {
+            resolve()
+          }
+        })
+    })
   },
   getDocs() {
     const result = []
@@ -61,23 +129,30 @@ const itemsData = {
     await itemsData.stream()
     let isAllFin = false
 
-    // const capabilities = webdriver.Capabilities.chrome()
-    // capabilities.set('chromeOptions', {
-    //   args: ['--headless', '--no-sandbox', '--disable-gpu', `--window-size=1980,1200`],
-    // })
-    // const driver = []
-    // for (let d = 1; d <= 2; d++) {
-    //   driver[d] = await new Builder().withCapabilities(capabilities).build()
-    //   await driver[d].get('https://www.amazon.com/')
-    //   await driver[d].wait(until.elementLocated(By.id('nav-search-bar-form')), 50000)
-    // }
-
     let itemDataArray = []
+    const capabilities = webdriver.Capabilities.chrome()
+    capabilities.set('chromeOptions', {
+      args: ['--headless', '--no-sandbox', '--disable-gpu', `--window-size=1980,1200`],
+    })
+    const driver = []
+    for (let d = 0; d < 20; d++) {
+      driver[d] = await new Builder().withCapabilities(capabilities).build()
+    }
 
-    // while (!isAllFin) {
-    itemDataArray = itemsData.getDocs()
-    console.log('itemDataArray=>', itemDataArray)
-    // }
+    let num = 0
+
+    while (!isAllFin) {
+      const driverNum = num % 20
+      console.log(driverNum)
+      itemDataArray = itemsData.getDocs()
+      console.log('itemDataArray=>', itemDataArray[0].id)
+      const ref = await db
+        .collection(`Items/${currentDate}/Items`)
+        .doc(itemDataArray[0].id)
+        .update({ priceInUS: null })
+      getEachInfoInUs(driver[driverNum], itemDataArray[0])
+      num += 1
+    }
   } catch (err) {
     console.log('err=>', err)
   }
