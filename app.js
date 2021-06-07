@@ -394,11 +394,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
             // await promisify(fs.writeFile)('screenshot.jpg', buffer)
 
             const el = await driver[n].findElements(
-              By.css(
-                '.s-result-item.s-asin:nth-child(' +
-                  i +
-                  ') span.a-size-base-plus.a-color-base.a-text-normal'
-              )
+              By.css('.s-result-item.s-asin:nth-child(' + i + ') h2.a-color-base')
             )
 
             console.log(i)
@@ -408,23 +404,24 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                 .findElement(By.css('.s-result-item.s-asin:nth-child(' + i + ')'))
                 .getAttribute('data-asin')
 
-              if (!itemsData.getDocById(asin)?.id) {
-                const title = driver[n].findElement(
-                  By.css(
-                    '.s-result-item.s-asin:nth-child(' +
-                      i +
-                      ') h2.a-size-mini.a-spacing-none.a-color-base.s-line-clamp-4 > a'
+              const priceExist = await driver[n].findElements(
+                By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
+              )
+              console.log('priceExist=>', priceExist)
+              if (!itemsData.getDocById(asin)?.id && priceExist.length) {
+                result.priceInJp = await driver[n]
+                  .findElement(
+                    By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
                   )
+                  .getText()
+                const title = driver[n].findElement(
+                  By.css('.s-result-item.s-asin:nth-child(' + i + ') h2.a-color-base > a')
                 )
                 const text = await title.getText()
                 result.title = text
                 const href = await driver[n]
                   .findElement(
-                    By.css(
-                      '.s-result-item.s-asin:nth-child(' +
-                        i +
-                        ') h2.a-size-mini.a-spacing-none.a-color-base.s-line-clamp-4 > a'
-                    )
+                    By.css('.s-result-item.s-asin:nth-child(' + i + ') h2.a-color-base > a')
                   )
                   .getAttribute('href')
 
@@ -440,31 +437,21 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                     .getAttribute('src')
                   result.imageLink = src
                 }
-                const priceExist = await driver[n].findElements(
-                  By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
-                )
-                if (priceExist.length) {
-                  result.priceInJp = await driver[n]
-                    .findElement(
-                      By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
-                    )
-                    .getText()
 
-                  result.asin = asin
-                  result.id = asin
-                  result.linkInUS = 'https://amazon.com/dp/' + asin
-                  result.keyword = putKeyword
+                result.asin = asin
+                result.id = asin
+                result.linkInUS = 'https://amazon.com/dp/' + asin
+                result.keyword = putKeyword
 
-                  // Call eachItemInfoAtUsa(n, driver02)
+                // Call eachItemInfoAtUsa(n, driver02)
 
-                  result.created_at = today
-                  result.category = categories[t].keyword
-                  result.accessId = accessId
+                result.created_at = today
+                result.category = categories[t].keyword
+                result.accessId = accessId
 
-                  await ref.doc(result.asin).set(result)
-                  console.log(result)
-                  console.log(itemsData.getDocs().length)
-                }
+                await ref.doc(result.asin).set(result)
+                console.log(result)
+                console.log(itemsData.getDocs().length)
               }
               isFirstLoad = false
               const logInfo = {

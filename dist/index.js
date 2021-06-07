@@ -271,35 +271,34 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
           for (let i = 1; i <= numPerPage.length; i++) {
             const currentLatestLog2 = logsData.getLatestDoc() || {};
             let result = {};
-            const el = await driver2[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-size-base-plus.a-color-base.a-text-normal"));
+            const el = await driver2[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base"));
             console.log(i);
             const today = new Date();
             if (el.length) {
               const asin = await driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ")")).getAttribute("data-asin");
-              if (!((_b = itemsData.getDocById(asin)) == null ? void 0 : _b.id)) {
-                const title = driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-size-mini.a-spacing-none.a-color-base.s-line-clamp-4 > a"));
+              const priceExist = await driver2[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole"));
+              console.log("priceExist=>", priceExist);
+              if (!((_b = itemsData.getDocById(asin)) == null ? void 0 : _b.id) && priceExist.length) {
+                result.priceInJp = await driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole")).getText();
+                const title = driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a"));
                 const text = await title.getText();
                 result.title = text;
-                const href = await driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-size-mini.a-spacing-none.a-color-base.s-line-clamp-4 > a")).getAttribute("href");
+                const href = await driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a")).getAttribute("href");
                 result.link = "https://amazon.co.jp" + href;
                 if (await driver2[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") img.s-image"))) {
                   const src = await driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") img.s-image")).getAttribute("src");
                   result.imageLink = src;
                 }
-                const priceExist = await driver2[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole"));
-                if (priceExist.length) {
-                  result.priceInJp = await driver2[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole")).getText();
-                  result.asin = asin;
-                  result.id = asin;
-                  result.linkInUS = "https://amazon.com/dp/" + asin;
-                  result.keyword = putKeyword;
-                  result.created_at = today;
-                  result.category = categories[t].keyword;
-                  result.accessId = accessId;
-                  await ref.doc(result.asin).set(result);
-                  console.log(result);
-                  console.log(itemsData.getDocs().length);
-                }
+                result.asin = asin;
+                result.id = asin;
+                result.linkInUS = "https://amazon.com/dp/" + asin;
+                result.keyword = putKeyword;
+                result.created_at = today;
+                result.category = categories[t].keyword;
+                result.accessId = accessId;
+                await ref.doc(result.asin).set(result);
+                console.log(result);
+                console.log(itemsData.getDocs().length);
               }
               isFirstLoad = false;
               const logInfo = {
