@@ -80,8 +80,9 @@ var logsData = {
   logDB: [],
   async stream() {
     await db.collection("Logs").doc(currentDate).set({ created_at: current });
-    const res = await db.collection(`Logs/${currentDate}/Logs`).get();
-    this.logDB = res;
+    await db.collection(`Logs/${currentDate}/Logs`).onSnapshot((res) => {
+      this.logDB = res;
+    });
   },
   async getDocs() {
     const result = [];
@@ -203,6 +204,7 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
     const ref = await db.collection(`Items/${currentDate}/Items`);
     let logsDataObj;
     logsDataObj = logsData.getLatestDoc();
+    console.log(logsDataObj);
     const latestLogDate = ((_a = logsDataObj == null ? void 0 : logsDataObj.created_at) == null ? void 0 : _a.seconds) ? new Date(logsDataObj.created_at.seconds * 1e3) : new Date(0);
     const now = new Date();
     let checkLogData = {};
@@ -216,25 +218,26 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
         let pageNum = isFirstLoad && isExistTodayLog ? checkLogData.pageNum : 1;
         while (pageNum < 1e3) {
           const currentLatestLog = logsData.getLatestDoc() || {};
+          console.log(currentLatestLog);
           if (j > currentLatestLog.searchTextIndex) {
             j = currentLatestLog.searchTextIndex;
             t = currentLatestLog.nodeIndex;
             pageNum = currentLatestLog.pageNum;
             if (currentLatestLog.accessId !== currentLatestLog) {
-              pageNum = currentLatestLog.pageNum + 1;
+              pageNum = currentLatestLog.pageNum + 5;
             }
           }
           if (j === currentLatestLog.searchTextIndex && currentLatestLog.nodeIndex > t) {
             t = currentLatestLog.nodeIndex;
             pageNum = currentLatestLog.pageNum;
             if (currentLatestLog.accessId !== currentLatestLog) {
-              pageNum = currentLatestLog.pageNum + 1;
+              pageNum = currentLatestLog.pageNum + 5;
             }
           }
           if (j === currentLatestLog.searchTextIndex && currentLatestLog.nodeIndex > t && currentLatestLog.pageNum > pageNum) {
             pageNum = currentLatestLog.pageNum;
             if (currentLatestLog.accessId !== currentLatestLog) {
-              pageNum = currentLatestLog.pageNum + 1;
+              pageNum = currentLatestLog.pageNum + 5;
             }
           }
           const putKeyword = keywords[j];

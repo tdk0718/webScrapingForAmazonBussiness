@@ -254,6 +254,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
     let logsDataObj
 
     logsDataObj = logsData.getLatestDoc()
+    console.log(logsDataObj)
 
     const latestLogDate = logsDataObj?.created_at?.seconds
       ? new Date(logsDataObj.created_at.seconds * 1000)
@@ -296,13 +297,13 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
         let pageNum = isFirstLoad && isExistTodayLog ? checkLogData.pageNum : 1
         while (pageNum < 1000) {
           const currentLatestLog = logsData.getLatestDoc() || {}
-
+          console.log(currentLatestLog)
           if (j > currentLatestLog.searchTextIndex) {
             j = currentLatestLog.searchTextIndex
             t = currentLatestLog.nodeIndex
             pageNum = currentLatestLog.pageNum
             if (currentLatestLog.accessId !== currentLatestLog) {
-              pageNum = currentLatestLog.pageNum + 1
+              pageNum = currentLatestLog.pageNum + 5
             }
           }
 
@@ -310,7 +311,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
             t = currentLatestLog.nodeIndex
             pageNum = currentLatestLog.pageNum
             if (currentLatestLog.accessId !== currentLatestLog) {
-              pageNum = currentLatestLog.pageNum + 1
+              pageNum = currentLatestLog.pageNum + 5
             }
           }
           if (
@@ -320,7 +321,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
           ) {
             pageNum = currentLatestLog.pageNum
             if (currentLatestLog.accessId !== currentLatestLog) {
-              pageNum = currentLatestLog.pageNum + 1
+              pageNum = currentLatestLog.pageNum + 5
             }
           }
 
