@@ -285,12 +285,7 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
                   const title = driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a"));
                   const text = await title.getText();
                   result.title = text;
-                  const href = await driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a")).getAttribute("href");
-                  result.link = "https://amazon.co.jp" + href;
-                  if (await driver[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") img.s-image"))) {
-                    const src = await driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") img.s-image")).getAttribute("src");
-                    result.imageLink = src;
-                  }
+                  result.link = "https://amazon.co.jp/dp/" + asin;
                   result.asin = asin;
                   result.id = asin;
                   result.linkInUS = "https://amazon.com/dp/" + asin;

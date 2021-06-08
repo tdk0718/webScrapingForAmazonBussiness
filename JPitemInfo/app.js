@@ -431,24 +431,8 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                   )
                   const text = await title.getText()
                   result.title = text
-                  const href = await driver[n]
-                    .findElement(
-                      By.css('.s-result-item.s-asin:nth-child(' + i + ') h2.a-color-base > a')
-                    )
-                    .getAttribute('href')
 
-                  result.link = 'https://amazon.co.jp' + href
-
-                  if (
-                    await driver[n].findElements(
-                      By.css('.s-result-item.s-asin:nth-child(' + i + ') img.s-image')
-                    )
-                  ) {
-                    const src = await driver[n]
-                      .findElement(By.css('.s-result-item.s-asin:nth-child(' + i + ') img.s-image'))
-                      .getAttribute('src')
-                    result.imageLink = src
-                  }
+                  result.link = 'https://amazon.co.jp/dp/' + asin
 
                   result.asin = asin
                   result.id = asin
