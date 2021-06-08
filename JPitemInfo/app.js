@@ -97,8 +97,9 @@ const logsData = {
       .collection('Logs')
       .doc(currentDate)
       .set({ created_at: current })
-    const res = await db.collection(`Logs/${currentDate}/Logs`).get()
-    this.logDB = res
+    await db.collection(`Logs/${currentDate}/Logs`).onSnapshot(res => {
+      this.logDB = res
+    })
   },
   async getDocs() {
     const result = []
