@@ -234,6 +234,8 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
     let isFirstLoad = true
     let isExistTodayLog = false
 
+    let isFinishGetForThisNode = false
+
     console.log('start')
 
     // await categoriesData.stream()
@@ -303,15 +305,21 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
             t = currentLatestLog.nodeIndex
             pageNum = currentLatestLog.pageNum
             if (currentLatestLog.accessId !== currentLatestLog) {
-              pageNum = currentLatestLog.pageNum + 5
+              pageNum = currentLatestLog.pageNum + 1
             }
           }
-
+          // if (isFinishGetForThisNode) {
+          //   t += 1
+          //   pageNum = 1
+          //   isFinishGetForThisNode = false
+          // }
           if (j === currentLatestLog.searchTextIndex && currentLatestLog.nodeIndex > t) {
             t = currentLatestLog.nodeIndex
+
             pageNum = currentLatestLog.pageNum
             if (currentLatestLog.accessId !== currentLatestLog) {
-              pageNum = currentLatestLog.pageNum + 5
+              isFinishGetForThisNode = false
+              pageNum = currentLatestLog.pageNum + 1
             }
           }
           if (
@@ -321,7 +329,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
           ) {
             pageNum = currentLatestLog.pageNum
             if (currentLatestLog.accessId !== currentLatestLog) {
-              pageNum = currentLatestLog.pageNum + 5
+              pageNum = currentLatestLog.pageNum + 1
             }
           }
 
@@ -389,9 +397,15 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                 .replace(',', '')
             )
 
-            if (currentNum > limitNum) break
+            if (currentNum > limitNum) {
+              isFinishGetForThisNode = true
+              break
+            }
           }
-          if (!pageOverFlow) break
+          if (!pageOverFlow) {
+            isFinishGetForThisNode = true
+            break
+          }
 
           for (let i = 1; i <= numPerPage.length; i++) {
             const currentLatestLog = logsData.getLatestDoc() || {}
@@ -447,7 +461,6 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                   result.created_at = today
                   result.category = categories[t].keyword
                   result.accessId = accessId
-                  result.priceInUS = ''
 
                   await ref.doc(result.asin).set(result)
 

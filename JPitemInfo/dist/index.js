@@ -190,6 +190,7 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
     const accessId = createNewAccessId();
     let isFirstLoad = true;
     let isExistTodayLog = false;
+    let isFinishGetForThisNode = false;
     console.log("start");
     await logsData.stream();
     const logRef = await db.collection(`Logs/${currentDate}/Logs`);
@@ -224,20 +225,21 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
             t = currentLatestLog.nodeIndex;
             pageNum = currentLatestLog.pageNum;
             if (currentLatestLog.accessId !== currentLatestLog) {
-              pageNum = currentLatestLog.pageNum + 5;
+              pageNum = currentLatestLog.pageNum + 1;
             }
           }
           if (j === currentLatestLog.searchTextIndex && currentLatestLog.nodeIndex > t) {
             t = currentLatestLog.nodeIndex;
             pageNum = currentLatestLog.pageNum;
             if (currentLatestLog.accessId !== currentLatestLog) {
-              pageNum = currentLatestLog.pageNum + 5;
+              isFinishGetForThisNode = false;
+              pageNum = currentLatestLog.pageNum + 1;
             }
           }
           if (j === currentLatestLog.searchTextIndex && currentLatestLog.nodeIndex > t && currentLatestLog.pageNum > pageNum) {
             pageNum = currentLatestLog.pageNum;
             if (currentLatestLog.accessId !== currentLatestLog) {
-              pageNum = currentLatestLog.pageNum + 5;
+              pageNum = currentLatestLog.pageNum + 1;
             }
           }
           const putKeyword = keywords[j];
@@ -266,11 +268,15 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
             const currentNum = Number(pageOverFlowArray[3].split("-")[0].replace(",", ""));
             console.log(pageOverFlowArray[3].split("-")[1]);
             const limitNum = Number(pageOverFlowArray[3].split("-")[1].replace("\u4EF6", "").replace(",", ""));
-            if (currentNum > limitNum)
+            if (currentNum > limitNum) {
+              isFinishGetForThisNode = true;
               break;
+            }
           }
-          if (!pageOverFlow)
+          if (!pageOverFlow) {
+            isFinishGetForThisNode = true;
             break;
+          }
           for (let i = 1; i <= numPerPage.length; i++) {
             const currentLatestLog2 = logsData.getLatestDoc() || {};
             let result = {};
@@ -297,7 +303,6 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
                   result.created_at = today;
                   result.category = categories[t].keyword;
                   result.accessId = accessId;
-                  result.priceInUS = "";
                   await ref.doc(result.asin).set(result);
                   console.log(result);
                   console.log("num=>", itemsData.getDocs().length);
