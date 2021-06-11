@@ -15,14 +15,16 @@ const runtimeOpts = {
 const getAmazonInfoInUSA = async (data, ItemsId, eachItemId, page) => {
   try {
     console.log(3)
+    await page.waitFor(1000)
 
     // await page.waitForSelector('#nav-logo-sprites')
-    await page.evaluate(async () => {
-      const dataList = {}
+    return await page.evaluate(async () => {
+      let dataList = ''
+      console.log()
 
       const noImg = document.querySelectorAll('#g > div > a > img')
       if (noImg.length) {
-        cdataList = { priceInUS: null }
+        dataList = ''
       } else {
         const titleExist = document.querySelectorAll('#productTitle')
         console.log(titleExist)
@@ -45,16 +47,16 @@ const getAmazonInfoInUSA = async (data, ItemsId, eachItemId, page) => {
           let priceInUSToYen = 0
           let priceDeff = 0
 
-          if (priceInUS) {
-            priceInUSToYen = priceInUS * 110
-            priceDeff = data.priceInJp - priceInUSToYen
-          }
-          cdataList = { priceInUSToYen, priceDeff, priceInUS, USTitle }
+          // if (priceInUS) {
+          //   priceInUSToYen = priceInUS * 110
+          //   priceDeff = data.priceInJp - priceInUSToYen
+          // }
+          dataList = { priceInUSToYen, priceInUS, USTitle }
         } else {
-          cdataList = { priceInUS: null }
+          dataList = ''
         }
       }
-      return cdataList
+      return dataList
     })
   } catch (err) {
     console.log(err)
@@ -75,10 +77,19 @@ exports.updateItems = functions
     const page = await browser.newPage()
     await page.goto(data.linkInUS)
     const updateInfo = await getAmazonInfoInUSA(data, ItemsId, eachItemId, page)
-    await admin
-      .firestore()
-      .collection(`Items/${ItemsId}/Items`)
-      .doc(eachItemId)
-      .update(updateInfo)
+    if (updateInfo) {
+      await admin
+        .firestore()
+        .collection(`Items/${ItemsId}/Items`)
+        .doc(eachItemId)
+        .update(updateInfo)
+    }
+    if (!updateInfo) {
+      await admin
+        .firestore()
+        .collection(`Items/${ItemsId}/Items`)
+        .doc(eachItemId)
+        .delete()
+    }
     await browser.close()
   })
