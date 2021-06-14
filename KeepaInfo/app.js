@@ -131,6 +131,7 @@ const itemsData = {
           const num = await driver.findElements(
             By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(1)')
           )
+          result.ranking = 1
 
           if (num.length) {
             const text = await driver
