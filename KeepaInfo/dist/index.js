@@ -83,62 +83,67 @@ var itemsData = {
     await driver.findElement(By.id("submitLogin")).click();
     let ref = await itemsData.getDocs();
     while (ref.length) {
-      ref = await itemsData.getDocs();
-      const infoObject = ref[0];
-      await driver.get("https://keepa.com/#!product/5-" + infoObject.id);
-      await driver.wait(until.elementLocated(By.id("tabMore")), 1e5);
-      await driver.findElement(By.css("li#tabMore")).click();
-      await driver.wait(until.elementLocated(By.css("#grid-product-detail")), 1e5);
-      let tableRow = await driver.findElements(By.css("#grid-product-detail .ag-row"));
-      const result = {};
-      console.log(tableRow.length);
-      for (let h = 1; h <= tableRow.length; h++) {
-        const num = await driver.findElements(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(1)"));
-        if (num.length) {
-          const text = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(1)")).getText();
-          console.log(text);
-          if (text === "Package - Dimension (cm\xB3)") {
-            result.Dimension = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
-          }
-          if (text === "Package - Weight (g)") {
-            result.Weight = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
-          }
-          if (text === "Reviews - \u8A55\u4FA1") {
-            result.Reviews = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
-          }
-          if (text === "Reviews - \u30EC\u30D3\u30E5\u30FC\u6570") {
-            result.ReviewsNumber = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
-          }
-        }
-      }
-      tableRow = await driver.findElements(By.css("#grid-product-price .ag-row"));
-      for (let h = 1; h <= tableRow.length; h++) {
-        const num = await driver.findElements(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(1)"));
-        if (num.length) {
-          const text = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(1)")).getText();
-          console.log(text);
-          if (text === "\u58F2\u308C\u7B4B\u30E9\u30F3\u30AD\u30F3\u30B0 - \u73FE\u5728\u4FA1\u683C") {
-            result.ranking = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
-          }
-          if (text === "\u65B0\u54C1\u30A2\u30A4\u30C6\u30E0\u6570 - \u73FE\u5728\u4FA1\u683C") {
-            result.NewItemNum = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
-          }
-          if (text === "\u65B0\u54C1\u30A2\u30A4\u30C6\u30E0\u6570 - 90 days avg.") {
-            result.NewItemNum90 = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
-          }
-          if (text === "\u58F2\u308C\u7B4B\u30E9\u30F3\u30AD\u30F3\u30B0 - Drops last 30 days") {
-            result.RankingDrop30 = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
-          }
-          if (text === "\u58F2\u308C\u7B4B\u30E9\u30F3\u30AD\u30F3\u30B0 - Drops last 90 days") {
-            result.RankingDrop90 = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
-          }
-          if (text === "\u58F2\u308C\u7B4B\u30E9\u30F3\u30AD\u30F3\u30B0 - Drops last 180 days") {
-            result.RankingDrop180 = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+      try {
+        ref = await itemsData.getDocs();
+        const infoObject = ref[0];
+        await driver.get("https://keepa.com/#!product/5-" + infoObject.id);
+        await driver.wait(until.elementLocated(By.id("tabMore")), 1e5);
+        await driver.findElement(By.css("li#tabMore")).click();
+        await driver.wait(until.elementLocated(By.css("#grid-product-detail")), 1e5);
+        let tableRow = await driver.findElements(By.css("#grid-product-detail .ag-row"));
+        const result = {};
+        console.log(tableRow.length);
+        for (let h = 1; h <= tableRow.length; h++) {
+          const num = await driver.findElements(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(1)"));
+          if (num.length) {
+            const text = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(1)")).getText();
+            console.log(text);
+            if (text === "Package - Dimension (cm\xB3)") {
+              result.Dimension = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+            }
+            if (text === "Package - Weight (g)") {
+              result.Weight = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+            }
+            if (text === "Reviews - \u8A55\u4FA1") {
+              result.Reviews = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+            }
+            if (text === "Reviews - \u30EC\u30D3\u30E5\u30FC\u6570") {
+              result.ReviewsNumber = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+            }
           }
         }
+        tableRow = await driver.findElements(By.css("#grid-product-price .ag-row"));
+        for (let h = 1; h <= tableRow.length; h++) {
+          const num = await driver.findElements(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(1)"));
+          if (num.length) {
+            const text = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(1)")).getText();
+            console.log(text);
+            if (text === "\u58F2\u308C\u7B4B\u30E9\u30F3\u30AD\u30F3\u30B0 - \u73FE\u5728\u4FA1\u683C") {
+              result.ranking = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+            }
+            if (text === "\u65B0\u54C1\u30A2\u30A4\u30C6\u30E0\u6570 - \u73FE\u5728\u4FA1\u683C") {
+              result.NewItemNum = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+            }
+            if (text === "\u65B0\u54C1\u30A2\u30A4\u30C6\u30E0\u6570 - 90 days avg.") {
+              result.NewItemNum90 = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+            }
+            if (text === "\u58F2\u308C\u7B4B\u30E9\u30F3\u30AD\u30F3\u30B0 - Drops last 30 days") {
+              result.RankingDrop30 = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+            }
+            if (text === "\u58F2\u308C\u7B4B\u30E9\u30F3\u30AD\u30F3\u30B0 - Drops last 90 days") {
+              result.RankingDrop90 = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+            }
+            if (text === "\u58F2\u308C\u7B4B\u30E9\u30F3\u30AD\u30F3\u30B0 - Drops last 180 days") {
+              result.RankingDrop180 = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+            }
+          }
+        }
+        console.log(result);
+        dbItem.doc(infoObject.id).update(result);
+      } catch (e) {
+        console.log(e);
+        continue;
       }
-      console.log(result);
-      dbItem.doc(infoObject.id).update(result);
     }
     driver.quit();
   } catch (err) {

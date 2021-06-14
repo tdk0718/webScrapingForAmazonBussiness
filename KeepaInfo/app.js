@@ -79,113 +79,118 @@ const itemsData = {
     let ref = await itemsData.getDocs()
 
     while (ref.length) {
-      ref = await itemsData.getDocs()
-      const infoObject = ref[0]
+      try {
+        ref = await itemsData.getDocs()
+        const infoObject = ref[0]
 
-      await driver.get('https://keepa.com/#!product/5-' + infoObject.id)
+        await driver.get('https://keepa.com/#!product/5-' + infoObject.id)
 
-      await driver.wait(until.elementLocated(By.id('tabMore')), 100000)
-      await driver.findElement(By.css('li#tabMore')).click()
-      await driver.wait(until.elementLocated(By.css('#grid-product-detail')), 100000)
+        await driver.wait(until.elementLocated(By.id('tabMore')), 100000)
+        await driver.findElement(By.css('li#tabMore')).click()
+        await driver.wait(until.elementLocated(By.css('#grid-product-detail')), 100000)
 
-      let tableRow = await driver.findElements(By.css('#grid-product-detail .ag-row'))
-      const result = {}
-      console.log(tableRow.length)
-      for (let h = 1; h <= tableRow.length; h++) {
-        const num = await driver.findElements(
-          By.css('.ag-row:nth-child(' + h + ') > div:nth-child(1)')
-        )
+        let tableRow = await driver.findElements(By.css('#grid-product-detail .ag-row'))
+        const result = {}
+        console.log(tableRow.length)
+        for (let h = 1; h <= tableRow.length; h++) {
+          const num = await driver.findElements(
+            By.css('.ag-row:nth-child(' + h + ') > div:nth-child(1)')
+          )
 
-        if (num.length) {
-          const text = await driver
-            .findElement(By.css('.ag-row:nth-child(' + h + ') > div:nth-child(1)'))
-            .getText()
-          console.log(text)
-          if (text === 'Package - Dimension (cm³)') {
-            result.Dimension = await driver
-              .findElement(By.css('.ag-row:nth-child(' + h + ') > div:nth-child(2)'))
+          if (num.length) {
+            const text = await driver
+              .findElement(By.css('.ag-row:nth-child(' + h + ') > div:nth-child(1)'))
               .getText()
-          }
+            console.log(text)
+            if (text === 'Package - Dimension (cm³)') {
+              result.Dimension = await driver
+                .findElement(By.css('.ag-row:nth-child(' + h + ') > div:nth-child(2)'))
+                .getText()
+            }
 
-          if (text === 'Package - Weight (g)') {
-            result.Weight = await driver
-              .findElement(By.css('.ag-row:nth-child(' + h + ') > div:nth-child(2)'))
-              .getText()
-          }
+            if (text === 'Package - Weight (g)') {
+              result.Weight = await driver
+                .findElement(By.css('.ag-row:nth-child(' + h + ') > div:nth-child(2)'))
+                .getText()
+            }
 
-          if (text === 'Reviews - 評価') {
-            result.Reviews = await driver
-              .findElement(By.css('.ag-row:nth-child(' + h + ') > div:nth-child(2)'))
-              .getText()
-          }
-          if (text === 'Reviews - レビュー数') {
-            result.ReviewsNumber = await driver
-              .findElement(By.css('.ag-row:nth-child(' + h + ') > div:nth-child(2)'))
-              .getText()
+            if (text === 'Reviews - 評価') {
+              result.Reviews = await driver
+                .findElement(By.css('.ag-row:nth-child(' + h + ') > div:nth-child(2)'))
+                .getText()
+            }
+            if (text === 'Reviews - レビュー数') {
+              result.ReviewsNumber = await driver
+                .findElement(By.css('.ag-row:nth-child(' + h + ') > div:nth-child(2)'))
+                .getText()
+            }
           }
         }
-      }
-      tableRow = await driver.findElements(By.css('#grid-product-price .ag-row'))
-      for (let h = 1; h <= tableRow.length; h++) {
-        const num = await driver.findElements(
-          By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(1)')
-        )
+        tableRow = await driver.findElements(By.css('#grid-product-price .ag-row'))
+        for (let h = 1; h <= tableRow.length; h++) {
+          const num = await driver.findElements(
+            By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(1)')
+          )
 
-        if (num.length) {
-          const text = await driver
-            .findElement(
-              By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(1)')
-            )
-            .getText()
-          console.log(text)
-          if (text === '売れ筋ランキング - 現在価格') {
-            result.ranking = await driver
+          if (num.length) {
+            const text = await driver
               .findElement(
-                By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(2)')
+                By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(1)')
               )
               .getText()
-          }
+            console.log(text)
+            if (text === '売れ筋ランキング - 現在価格') {
+              result.ranking = await driver
+                .findElement(
+                  By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(2)')
+                )
+                .getText()
+            }
 
-          if (text === '新品アイテム数 - 現在価格') {
-            result.NewItemNum = await driver
-              .findElement(
-                By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(2)')
-              )
-              .getText()
-          }
+            if (text === '新品アイテム数 - 現在価格') {
+              result.NewItemNum = await driver
+                .findElement(
+                  By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(2)')
+                )
+                .getText()
+            }
 
-          if (text === '新品アイテム数 - 90 days avg.') {
-            result.NewItemNum90 = await driver
-              .findElement(
-                By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(2)')
-              )
-              .getText()
-          }
-          if (text === '売れ筋ランキング - Drops last 30 days') {
-            result.RankingDrop30 = await driver
-              .findElement(
-                By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(2)')
-              )
-              .getText()
-          }
-          if (text === '売れ筋ランキング - Drops last 90 days') {
-            result.RankingDrop90 = await driver
-              .findElement(
-                By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(2)')
-              )
-              .getText()
-          }
-          if (text === '売れ筋ランキング - Drops last 180 days') {
-            result.RankingDrop180 = await driver
-              .findElement(
-                By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(2)')
-              )
-              .getText()
+            if (text === '新品アイテム数 - 90 days avg.') {
+              result.NewItemNum90 = await driver
+                .findElement(
+                  By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(2)')
+                )
+                .getText()
+            }
+            if (text === '売れ筋ランキング - Drops last 30 days') {
+              result.RankingDrop30 = await driver
+                .findElement(
+                  By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(2)')
+                )
+                .getText()
+            }
+            if (text === '売れ筋ランキング - Drops last 90 days') {
+              result.RankingDrop90 = await driver
+                .findElement(
+                  By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(2)')
+                )
+                .getText()
+            }
+            if (text === '売れ筋ランキング - Drops last 180 days') {
+              result.RankingDrop180 = await driver
+                .findElement(
+                  By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(2)')
+                )
+                .getText()
+            }
           }
         }
+        console.log(result)
+        dbItem.doc(infoObject.id).update(result)
+      } catch (e) {
+        console.log(e)
+        continue
       }
-      console.log(result)
-      dbItem.doc(infoObject.id).update(result)
     }
 
     driver.quit()
