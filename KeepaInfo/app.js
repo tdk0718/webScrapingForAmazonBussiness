@@ -118,11 +118,15 @@ const itemsData = {
               result.Reviews = await driver
                 .findElement(By.css('.ag-row:nth-child(' + h + ') > div:nth-child(2)'))
                 .getText()
+              result.Reviews = Number(result.Reviews.replace(/,/g, '').replace(/ /g, ''))
             }
             if (text === 'Reviews - レビュー数') {
               result.ReviewsNumber = await driver
                 .findElement(By.css('.ag-row:nth-child(' + h + ') > div:nth-child(2)'))
                 .getText()
+              result.ReviewsNumber = Number(
+                result.ReviewsNumber.replace(/,/g, '').replace(/ /g, '')
+              )
             }
           }
         }
@@ -154,6 +158,7 @@ const itemsData = {
                   By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(2)')
                 )
                 .getText()
+              result.NewItemNum = Number(result.NewItemNum.replace(/,/g, '').replace(/ /g, ''))
             }
 
             if (text === '新品アイテム数 - 90 days avg.') {
@@ -162,6 +167,7 @@ const itemsData = {
                   By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(2)')
                 )
                 .getText()
+              result.NewItemNum90 = Number(result.NewItemNum90.replace(/,/g, '').replace(/ /g, ''))
             }
             if (text === '売れ筋ランキング - Drops last 30 days') {
               result.RankingDrop30 = await driver
@@ -169,6 +175,9 @@ const itemsData = {
                   By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(2)')
                 )
                 .getText()
+              result.RankingDrop30 = Number(
+                result.RankingDrop30.replace(/,/g, '').replace(/ /g, '')
+              )
             }
             if (text === '売れ筋ランキング - Drops last 90 days') {
               result.RankingDrop90 = await driver
@@ -176,6 +185,9 @@ const itemsData = {
                   By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(2)')
                 )
                 .getText()
+              result.RankingDrop90 = Number(
+                result.RankingDrop90.replace(/,/g, '').replace(/ /g, '')
+              )
             }
             if (text === '売れ筋ランキング - Drops last 180 days') {
               result.RankingDrop180 = await driver
@@ -183,6 +195,9 @@ const itemsData = {
                   By.css('#grid-product-price .ag-row:nth-child(' + h + ') > div:nth-child(2)')
                 )
                 .getText()
+              result.RankingDrop180 = Number(
+                result.RankingDrop180.replace(/,/g, '').replace(/ /g, '')
+              )
             }
           }
         }
