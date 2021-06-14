@@ -15,7 +15,6 @@ const runtimeOpts = {
 const getAmazonInfoInUSA = async (data, ItemsId, eachItemId, page) => {
   try {
     console.log(3)
-    await page.waitFor(1000)
 
     // await page.waitForSelector('#nav-logo-sprites')
     return await page.evaluate(async () => {
@@ -65,17 +64,19 @@ const getAmazonInfoInUSA = async (data, ItemsId, eachItemId, page) => {
 }
 
 exports.updateItems = functions
-  .runWith(runtimeOpts)
+  // .runWith(runtimeOpts)
   .region(REGION)
   .firestore.document('Items/{ItemsId}/Items/{eachItemId}')
   .onWrite(async (change, context) => {
     const ItemsId = context.params.ItemsId
     const eachItemId = context.params.eachItemId
     const data = change.after.data()
+    if (data.priceInUS) return
     const browser = await puppeteer.launch({ args: ['--no-sandbox'] })
     console.log(2)
     const page = await browser.newPage()
     await page.goto(data.linkInUS)
+    await page.waitFor(1000)
     const updateInfo = await getAmazonInfoInUSA(data, ItemsId, eachItemId, page)
     if (updateInfo) {
       await admin

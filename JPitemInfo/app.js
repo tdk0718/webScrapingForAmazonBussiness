@@ -445,6 +445,15 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                   const title = driver[n].findElement(
                     By.css('.s-result-item.s-asin:nth-child(' + i + ') h2.a-color-base > a')
                   )
+
+                  const stars = await driver[n].findElements(
+                    By.css(
+                      '.s-result-item.s-asin:nth-child(' +
+                        i +
+                        ') i.a-icon.a-icon-star-small.aok-align-bottom span.a-icon-alt'
+                    )
+                  )
+
                   const text = await title.getText()
                   result.title = text
 
@@ -461,6 +470,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                   result.created_at = today
                   result.category = categories[t].keyword
                   result.accessId = accessId
+                  result.ranking = 0
 
                   await ref.doc(result.asin).set(result)
 

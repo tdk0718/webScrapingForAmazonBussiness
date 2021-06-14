@@ -292,6 +292,7 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
                 if (Number(priceInJp) > 3e3 && !((_c = itemsData.getDocById(asin)) == null ? void 0 : _c.id)) {
                   result.priceInJp = Number(priceInJp);
                   const title = driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a"));
+                  const stars = await driver[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") i.a-icon.a-icon-star-small.aok-align-bottom span.a-icon-alt"));
                   const text = await title.getText();
                   result.title = text;
                   result.link = "https://amazon.co.jp/dp/" + asin;
@@ -303,6 +304,7 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
                   result.created_at = today;
                   result.category = categories[t].keyword;
                   result.accessId = accessId;
+                  result.ranking = 0;
                   await ref.doc(result.asin).set(result);
                   console.log(result);
                   console.log("num=>", itemsData.getDocs().length);
