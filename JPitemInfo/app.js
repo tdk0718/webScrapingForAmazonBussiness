@@ -471,7 +471,9 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
 
                 if (Number(priceInJp) > 3500 && !itemsData.getDocById(asin)?.id) {
                   await driverInKeepa.get('https://keepa.com/#!product/1-' + asin)
-
+                  try {
+                    await driverInKeepa.wait(until.elementLocated(By.css('span.priceNewsss')), 1000)
+                  } catch (e) {}
                   try {
                     await driverInKeepa.wait(until.elementLocated(By.css('span.priceNew')), 1000)
 
@@ -490,6 +492,11 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                       const newPriceInUS = newPriceInUSNumber.length
                         ? await driverInKeepa.findElement(By.css('span.priceNew')).getText()
                         : 0
+
+                      const USTitle =
+                        (await driverInKeepa
+                          .findElement(By.css('#productInfoBox > .productTableDescriptionTitle'))
+                          .getText()) || ''
 
                       result.priceInJp = Number(priceInJp)
                       const title = driver[n].findElement(
@@ -534,6 +541,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                       // Call eachItemInfoAtUsa(n, driver02)
 
                       result.created_at = today
+                      result.USTitle = USTitle
                       result.dolen = Number(dolen)
                       result.amazonPriceInUSToYen = result.dolen * result.amazonPriceInUS
                       result.newPriceInUSToYen = result.dolen * result.newPriceInUS
@@ -546,7 +554,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                       result.accessId = accessId
                       result.ranking = 0
 
-                      if (result.deffPrice > 3000) {
+                      if (result.deffPrice > 3000 && USTitle) {
                         const keepaInJP = await getKeepaInfo(driverInKeepaInJP, result)
                         result = { ...result, ...keepaInJP.result }
 
