@@ -131,12 +131,12 @@ export async function getKeepaInfo(driver, infoObject) {
           }
         }
         console.log(result)
-        resolve({ result })
+        resolve(result)
       }
     } catch (e) {
       console.log(e)
     }
 
-    resolve()
+    resolve({})
   })
 }

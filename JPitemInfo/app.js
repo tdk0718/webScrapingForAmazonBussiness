@@ -562,7 +562,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
 
                     if (result.deffPrice > 3000 && USTitle) {
                       const keepaInJP = await getKeepaInfo(driverInKeepaInJP, result)
-                      result = { ...result, ...keepaInJP.result }
+                      result = { ...result, ...keepaInJP }
 
                       await ref.doc(result.asin).set(result)
 
