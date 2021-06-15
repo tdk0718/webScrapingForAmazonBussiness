@@ -45,81 +45,83 @@ var import_process = __toModule(require("process"));
 var import_selenium_webdriver = __toModule(require("selenium-webdriver"));
 var { Builder, By, until } = import_selenium_webdriver.default;
 async function getKeepaInfo(driver, infoObject) {
-  try {
-    if (infoObject.id) {
-      await driver.get("https://keepa.com/#!product/5-" + infoObject.id);
-      try {
-        await driver.wait(until.elementLocated(By.id("statisticss")), 2e3);
-      } catch (e) {
-        console.log(e);
-      }
-      await driver.wait(until.elementLocated(By.id("tabMore")), 1e5);
-      await driver.findElement(By.id("tabMore")).click();
-      await driver.wait(until.elementLocated(By.css("#grid-product-detail")), 1e5);
-      let tableRow = await driver.findElements(By.css("#grid-product-detail .ag-row"));
-      const result = {};
-      console.log(tableRow.length);
-      for (let h = 1; h <= tableRow.length; h++) {
-        const num = await driver.findElements(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(1)"));
-        if (num.length) {
-          const text = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(1)")).getText();
-          console.log(text);
-          if (text === "Package - Dimension (cm\xB3)") {
-            result.Dimension = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
-          }
-          if (text === "Package - Weight (g)") {
-            result.Weight = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
-          }
-          if (text === "Reviews - \u8A55\u4FA1") {
-            result.Reviews = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
-            result.Reviews = Number(result.Reviews.replace(/,/g, "").replace(/ /g, ""));
-          }
-          if (text === "Reviews - \u30EC\u30D3\u30E5\u30FC\u6570") {
-            result.ReviewsNumber = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
-            result.ReviewsNumber = Number(result.ReviewsNumber.replace(/,/g, "").replace(/ /g, ""));
+  return new Promise(async (resolve, reject) => {
+    try {
+      if (infoObject.id) {
+        await driver.get("https://keepa.com/#!product/5-" + infoObject.id);
+        try {
+          await driver.wait(until.elementLocated(By.id("statisticss")), 2e3);
+        } catch (e) {
+          console.log(e);
+        }
+        await driver.wait(until.elementLocated(By.id("tabMore")), 1e5);
+        await driver.findElement(By.id("tabMore")).click();
+        await driver.wait(until.elementLocated(By.css("#grid-product-detail")), 1e5);
+        let tableRow = await driver.findElements(By.css("#grid-product-detail .ag-row"));
+        const result = {};
+        console.log(tableRow.length);
+        for (let h = 1; h <= tableRow.length; h++) {
+          const num = await driver.findElements(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(1)"));
+          if (num.length) {
+            const text = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(1)")).getText();
+            console.log(text);
+            if (text === "Package - Dimension (cm\xB3)") {
+              result.Dimension = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+            }
+            if (text === "Package - Weight (g)") {
+              result.Weight = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+            }
+            if (text === "Reviews - \u8A55\u4FA1") {
+              result.Reviews = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+              result.Reviews = Number(result.Reviews.replace(/,/g, "").replace(/ /g, ""));
+            }
+            if (text === "Reviews - \u30EC\u30D3\u30E5\u30FC\u6570") {
+              result.ReviewsNumber = await driver.findElement(By.css(".ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+              result.ReviewsNumber = Number(result.ReviewsNumber.replace(/,/g, "").replace(/ /g, ""));
+            }
           }
         }
-      }
-      result.ranking = 1;
-      tableRow = await driver.findElements(By.css("#grid-product-price .ag-row"));
-      for (let h = 1; h <= tableRow.length; h++) {
-        const num = await driver.findElements(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(1)"));
-        if (num.length) {
-          const text = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(1)")).getText();
-          console.log(text);
-          if (text === "\u58F2\u308C\u7B4B\u30E9\u30F3\u30AD\u30F3\u30B0 - \u73FE\u5728\u4FA1\u683C") {
-            result.ranking = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
-            result.ranking = Number(result.ranking.replace("# ", "").replace(/,/g, ""));
-          }
-          if (text === "\u65B0\u54C1\u30A2\u30A4\u30C6\u30E0\u6570 - \u73FE\u5728\u4FA1\u683C") {
-            result.NewItemNum = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
-            result.NewItemNum = Number(result.NewItemNum.replace(/,/g, "").replace(/ /g, ""));
-          }
-          if (text === "\u65B0\u54C1\u30A2\u30A4\u30C6\u30E0\u6570 - 90 days avg.") {
-            result.NewItemNum90 = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
-            result.NewItemNum90 = Number(result.NewItemNum90.replace(/,/g, "").replace(/ /g, ""));
-          }
-          if (text === "\u58F2\u308C\u7B4B\u30E9\u30F3\u30AD\u30F3\u30B0 - Drops last 30 days") {
-            result.RankingDrop30 = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
-            result.RankingDrop30 = Number(result.RankingDrop30.replace(/,/g, "").replace(/ /g, ""));
-          }
-          if (text === "\u58F2\u308C\u7B4B\u30E9\u30F3\u30AD\u30F3\u30B0 - Drops last 90 days") {
-            result.RankingDrop90 = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
-            result.RankingDrop90 = Number(result.RankingDrop90.replace(/,/g, "").replace(/ /g, ""));
-          }
-          if (text === "\u58F2\u308C\u7B4B\u30E9\u30F3\u30AD\u30F3\u30B0 - Drops last 180 days") {
-            result.RankingDrop180 = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
-            result.RankingDrop180 = Number(result.RankingDrop180.replace(/,/g, "").replace(/ /g, ""));
+        result.ranking = 1;
+        tableRow = await driver.findElements(By.css("#grid-product-price .ag-row"));
+        for (let h = 1; h <= tableRow.length; h++) {
+          const num = await driver.findElements(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(1)"));
+          if (num.length) {
+            const text = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(1)")).getText();
+            console.log(text);
+            if (text === "\u58F2\u308C\u7B4B\u30E9\u30F3\u30AD\u30F3\u30B0 - \u73FE\u5728\u4FA1\u683C") {
+              result.ranking = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+              result.ranking = Number(result.ranking.replace("# ", "").replace(/,/g, ""));
+            }
+            if (text === "\u65B0\u54C1\u30A2\u30A4\u30C6\u30E0\u6570 - \u73FE\u5728\u4FA1\u683C") {
+              result.NewItemNum = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+              result.NewItemNum = Number(result.NewItemNum.replace(/,/g, "").replace(/ /g, ""));
+            }
+            if (text === "\u65B0\u54C1\u30A2\u30A4\u30C6\u30E0\u6570 - 90 days avg.") {
+              result.NewItemNum90 = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+              result.NewItemNum90 = Number(result.NewItemNum90.replace(/,/g, "").replace(/ /g, ""));
+            }
+            if (text === "\u58F2\u308C\u7B4B\u30E9\u30F3\u30AD\u30F3\u30B0 - Drops last 30 days") {
+              result.RankingDrop30 = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+              result.RankingDrop30 = Number(result.RankingDrop30.replace(/,/g, "").replace(/ /g, ""));
+            }
+            if (text === "\u58F2\u308C\u7B4B\u30E9\u30F3\u30AD\u30F3\u30B0 - Drops last 90 days") {
+              result.RankingDrop90 = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+              result.RankingDrop90 = Number(result.RankingDrop90.replace(/,/g, "").replace(/ /g, ""));
+            }
+            if (text === "\u58F2\u308C\u7B4B\u30E9\u30F3\u30AD\u30F3\u30B0 - Drops last 180 days") {
+              result.RankingDrop180 = await driver.findElement(By.css("#grid-product-price .ag-row:nth-child(" + h + ") > div:nth-child(2)")).getText();
+              result.RankingDrop180 = Number(result.RankingDrop180.replace(/,/g, "").replace(/ /g, ""));
+            }
           }
         }
+        console.log(result);
+        resolve({ result });
       }
-      console.log(result);
-      return { result };
+    } catch (e) {
+      console.log(e);
     }
-  } catch (e) {
-    console.log(e);
-  }
-  return;
+    resolve();
+  });
 }
 
 // app.js
@@ -405,50 +407,54 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
                 if (Number(priceInJp) > 3500 && !((_c = itemsData.getDocById(asin)) == null ? void 0 : _c.id)) {
                   await driverInKeepa.get("https://keepa.com/#!product/1-" + asin);
                   try {
+                    await driverInKeepa.wait(until2.elementLocated(By2.css("span.priceNewsss")), 1e3);
+                  } catch (e) {
+                  }
+                  try {
                     await driverInKeepa.wait(until2.elementLocated(By2.css("span.priceNew")), 1e3);
-                    const amazonPriceInUSNumber = await driverInKeepa.findElements(By2.css("span.priceAmazon"));
-                    const newPriceInUSNumber = await driverInKeepa.findElements(By2.css("span.priceNew"));
-                    if (amazonPriceInUSNumber.length || newPriceInUSNumber.length) {
-                      const amazonPriceInUS = amazonPriceInUSNumber.length ? await driverInKeepa.findElement(By2.css("span.priceAmazon")).getText() : await driverInKeepa.findElement(By2.css("span.priceNew")).getText();
-                      const newPriceInUS = newPriceInUSNumber.length ? await driverInKeepa.findElement(By2.css("span.priceNew")).getText() : amazonPriceInUS;
-                      const USTitle = await driverInKeepa.findElement(By2.css("#productInfoBox > .productTableDescriptionTitle")).getText() || "";
-                      result.priceInJp = Number(priceInJp);
-                      const title = driver[n].findElement(By2.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a"));
-                      const stars = await driver[n].findElements(By2.css(".s-result-item.s-asin:nth-child(" + i + ") i.a-icon-star-small span.a-icon-alt"));
-                      const star = stars.length ? await driver[n].findElement(By2.css(".s-result-item.s-asin:nth-child(" + i + ") i.a-icon-star-small span.a-icon-alt")).getText() : "";
-                      const text = await title.getText();
-                      result.title = text;
-                      result.star = Number(star.replace("5\u3064\u661F\u306E\u3046\u3061", ""));
-                      result.link = "https://amazon.co.jp/dp/" + asin;
-                      result.asin = asin;
-                      result.id = asin;
-                      result.linkInUS = "https://amazon.com/dp/" + asin;
-                      result.keyword = putKeyword;
-                      result.categoryNode = node;
-                      result.amazonPriceInUS = Number(amazonPriceInUS.replace("$ ", "").replace(/,/g, ""));
-                      console.log(newPriceInUS);
-                      result.newPriceInUS = Number(newPriceInUS.replace("$ ", "").replace(/,/g, ""));
-                      result.created_at = today;
-                      result.USTitle = USTitle;
-                      result.dolen = Number(dolen);
-                      result.amazonPriceInUSToYen = result.dolen * result.amazonPriceInUS;
-                      result.newPriceInUSToYen = result.dolen * result.newPriceInUS;
-                      let usPriceToJP = 0;
-                      result.deffPrice = result.amazonPriceInUSToYen < result.newPriceInUSToYen ? result.priceInJp - result.amazonPriceInUSToYen : result.priceInJp - result.newPriceInUSToYen;
-                      result.category = categories[t].keyword;
-                      result.accessId = accessId;
-                      result.ranking = 0;
-                      console.log(result);
-                      if (result.deffPrice > 3e3 && USTitle) {
-                        const keepaInJP = await getKeepaInfo(driverInKeepaInJP, result);
-                        result = __spreadValues(__spreadValues({}, result), keepaInJP.result);
-                        await ref.doc(result.asin).set(result);
-                        console.log(result);
-                      }
-                      console.log("num=>", itemsData.getDocs().length);
-                    }
                   } catch (e) {
                     console.log(e);
+                  }
+                  const amazonPriceInUSNumber = await driverInKeepa.findElements(By2.css("span.priceAmazon"));
+                  const newPriceInUSNumber = await driverInKeepa.findElements(By2.css("span.priceNew"));
+                  if (amazonPriceInUSNumber.length || newPriceInUSNumber.length) {
+                    const amazonPriceInUS = amazonPriceInUSNumber.length ? await driverInKeepa.findElement(By2.css("span.priceAmazon")).getText() : await driverInKeepa.findElement(By2.css("span.priceNew")).getText();
+                    const newPriceInUS = newPriceInUSNumber.length ? await driverInKeepa.findElement(By2.css("span.priceNew")).getText() : amazonPriceInUS;
+                    const USTitle = await driverInKeepa.findElement(By2.css("#productInfoBox > .productTableDescriptionTitle")).getText() || "";
+                    result.priceInJp = Number(priceInJp);
+                    const title = driver[n].findElement(By2.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a"));
+                    const stars = await driver[n].findElements(By2.css(".s-result-item.s-asin:nth-child(" + i + ") i.a-icon-star-small span.a-icon-alt"));
+                    const star = stars.length ? await driver[n].findElement(By2.css(".s-result-item.s-asin:nth-child(" + i + ") i.a-icon-star-small span.a-icon-alt")).getText() : "";
+                    const text = await title.getText();
+                    result.title = text;
+                    result.star = Number(star.replace("5\u3064\u661F\u306E\u3046\u3061", ""));
+                    result.link = "https://amazon.co.jp/dp/" + asin;
+                    result.asin = asin;
+                    result.id = asin;
+                    result.linkInUS = "https://amazon.com/dp/" + asin;
+                    result.keyword = putKeyword;
+                    result.categoryNode = node;
+                    result.amazonPriceInUS = Number(amazonPriceInUS.replace("$ ", "").replace(/,/g, ""));
+                    console.log(newPriceInUS);
+                    result.newPriceInUS = Number(newPriceInUS.replace("$ ", "").replace(/,/g, ""));
+                    result.created_at = today;
+                    result.USTitle = USTitle;
+                    result.dolen = Number(dolen);
+                    result.amazonPriceInUSToYen = result.dolen * result.amazonPriceInUS;
+                    result.newPriceInUSToYen = result.dolen * result.newPriceInUS;
+                    let usPriceToJP = 0;
+                    result.deffPrice = result.amazonPriceInUSToYen < result.newPriceInUSToYen ? result.priceInJp - result.amazonPriceInUSToYen : result.priceInJp - result.newPriceInUSToYen;
+                    result.category = categories[t].keyword;
+                    result.accessId = accessId;
+                    result.ranking = 0;
+                    console.log(result);
+                    if (result.deffPrice > 3e3 && USTitle) {
+                      const keepaInJP = await getKeepaInfo(driverInKeepaInJP, result);
+                      result = __spreadValues(__spreadValues({}, result), keepaInJP.result);
+                      await ref.doc(result.asin).set(result);
+                      console.log(result);
+                    }
+                    console.log("num=>", itemsData.getDocs().length);
                   }
                 }
               }

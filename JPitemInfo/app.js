@@ -471,104 +471,104 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
 
                 if (Number(priceInJp) > 3500 && !itemsData.getDocById(asin)?.id) {
                   await driverInKeepa.get('https://keepa.com/#!product/1-' + asin)
-                  // try {
-                  //   await driverInKeepa.wait(until.elementLocated(By.css('span.priceNewsss')), 1000)
-                  // } catch (e) {}
+                  try {
+                    await driverInKeepa.wait(until.elementLocated(By.css('span.priceNewsss')), 1000)
+                  } catch (e) {}
                   try {
                     await driverInKeepa.wait(until.elementLocated(By.css('span.priceNew')), 1000)
-
-                    const amazonPriceInUSNumber = await driverInKeepa.findElements(
-                      By.css('span.priceAmazon')
-                    )
-
-                    const newPriceInUSNumber = await driverInKeepa.findElements(
-                      By.css('span.priceNew')
-                    )
-
-                    if (amazonPriceInUSNumber.length || newPriceInUSNumber.length) {
-                      const amazonPriceInUS = amazonPriceInUSNumber.length
-                        ? await driverInKeepa.findElement(By.css('span.priceAmazon')).getText()
-                        : await driverInKeepa.findElement(By.css('span.priceNew')).getText()
-                      const newPriceInUS = newPriceInUSNumber.length
-                        ? await driverInKeepa.findElement(By.css('span.priceNew')).getText()
-                        : amazonPriceInUS
-
-                      const USTitle =
-                        (await driverInKeepa
-                          .findElement(By.css('#productInfoBox > .productTableDescriptionTitle'))
-                          .getText()) || ''
-
-                      result.priceInJp = Number(priceInJp)
-                      const title = driver[n].findElement(
-                        By.css('.s-result-item.s-asin:nth-child(' + i + ') h2.a-color-base > a')
-                      )
-
-                      const stars = await driver[n].findElements(
-                        By.css(
-                          '.s-result-item.s-asin:nth-child(' +
-                            i +
-                            ') i.a-icon-star-small span.a-icon-alt'
-                        )
-                      )
-                      const star = stars.length
-                        ? await driver[n]
-                            .findElement(
-                              By.css(
-                                '.s-result-item.s-asin:nth-child(' +
-                                  i +
-                                  ') i.a-icon-star-small span.a-icon-alt'
-                              )
-                            )
-                            .getText()
-                        : ''
-
-                      const text = await title.getText()
-                      result.title = text
-                      result.star = Number(star.replace('5つ星のうち', ''))
-
-                      result.link = 'https://amazon.co.jp/dp/' + asin
-
-                      result.asin = asin
-                      result.id = asin
-                      result.linkInUS = 'https://amazon.com/dp/' + asin
-                      result.keyword = putKeyword
-                      result.categoryNode = node
-                      result.amazonPriceInUS = Number(
-                        amazonPriceInUS.replace('$ ', '').replace(/,/g, '')
-                      )
-                      console.log(newPriceInUS)
-                      result.newPriceInUS = Number(newPriceInUS.replace('$ ', '').replace(/,/g, ''))
-                      // Call eachItemInfoAtUsa(n, driver02)
-
-                      result.created_at = today
-                      result.USTitle = USTitle
-                      result.dolen = Number(dolen)
-                      result.amazonPriceInUSToYen = result.dolen * result.amazonPriceInUS
-                      result.newPriceInUSToYen = result.dolen * result.newPriceInUS
-                      let usPriceToJP = 0
-
-                      result.deffPrice =
-                        result.amazonPriceInUSToYen < result.newPriceInUSToYen
-                          ? result.priceInJp - result.amazonPriceInUSToYen
-                          : result.priceInJp - result.newPriceInUSToYen
-
-                      result.category = categories[t].keyword
-                      result.accessId = accessId
-                      result.ranking = 0
-                      console.log(result)
-
-                      if (result.deffPrice > 3000 && USTitle) {
-                        const keepaInJP = await getKeepaInfo(driverInKeepaInJP, result)
-                        result = { ...result, ...keepaInJP.result }
-
-                        await ref.doc(result.asin).set(result)
-
-                        console.log(result)
-                      }
-                      console.log('num=>', itemsData.getDocs().length)
-                    }
                   } catch (e) {
                     console.log(e)
+                  }
+
+                  const amazonPriceInUSNumber = await driverInKeepa.findElements(
+                    By.css('span.priceAmazon')
+                  )
+
+                  const newPriceInUSNumber = await driverInKeepa.findElements(
+                    By.css('span.priceNew')
+                  )
+
+                  if (amazonPriceInUSNumber.length || newPriceInUSNumber.length) {
+                    const amazonPriceInUS = amazonPriceInUSNumber.length
+                      ? await driverInKeepa.findElement(By.css('span.priceAmazon')).getText()
+                      : await driverInKeepa.findElement(By.css('span.priceNew')).getText()
+                    const newPriceInUS = newPriceInUSNumber.length
+                      ? await driverInKeepa.findElement(By.css('span.priceNew')).getText()
+                      : amazonPriceInUS
+
+                    const USTitle =
+                      (await driverInKeepa
+                        .findElement(By.css('#productInfoBox > .productTableDescriptionTitle'))
+                        .getText()) || ''
+
+                    result.priceInJp = Number(priceInJp)
+                    const title = driver[n].findElement(
+                      By.css('.s-result-item.s-asin:nth-child(' + i + ') h2.a-color-base > a')
+                    )
+
+                    const stars = await driver[n].findElements(
+                      By.css(
+                        '.s-result-item.s-asin:nth-child(' +
+                          i +
+                          ') i.a-icon-star-small span.a-icon-alt'
+                      )
+                    )
+                    const star = stars.length
+                      ? await driver[n]
+                          .findElement(
+                            By.css(
+                              '.s-result-item.s-asin:nth-child(' +
+                                i +
+                                ') i.a-icon-star-small span.a-icon-alt'
+                            )
+                          )
+                          .getText()
+                      : ''
+
+                    const text = await title.getText()
+                    result.title = text
+                    result.star = Number(star.replace('5つ星のうち', ''))
+
+                    result.link = 'https://amazon.co.jp/dp/' + asin
+
+                    result.asin = asin
+                    result.id = asin
+                    result.linkInUS = 'https://amazon.com/dp/' + asin
+                    result.keyword = putKeyword
+                    result.categoryNode = node
+                    result.amazonPriceInUS = Number(
+                      amazonPriceInUS.replace('$ ', '').replace(/,/g, '')
+                    )
+                    console.log(newPriceInUS)
+                    result.newPriceInUS = Number(newPriceInUS.replace('$ ', '').replace(/,/g, ''))
+                    // Call eachItemInfoAtUsa(n, driver02)
+
+                    result.created_at = today
+                    result.USTitle = USTitle
+                    result.dolen = Number(dolen)
+                    result.amazonPriceInUSToYen = result.dolen * result.amazonPriceInUS
+                    result.newPriceInUSToYen = result.dolen * result.newPriceInUS
+                    let usPriceToJP = 0
+
+                    result.deffPrice =
+                      result.amazonPriceInUSToYen < result.newPriceInUSToYen
+                        ? result.priceInJp - result.amazonPriceInUSToYen
+                        : result.priceInJp - result.newPriceInUSToYen
+
+                    result.category = categories[t].keyword
+                    result.accessId = accessId
+                    result.ranking = 0
+                    console.log(result)
+
+                    if (result.deffPrice > 3000 && USTitle) {
+                      const keepaInJP = await getKeepaInfo(driverInKeepaInJP, result)
+                      result = { ...result, ...keepaInJP.result }
+
+                      await ref.doc(result.asin).set(result)
+
+                      console.log(result)
+                    }
+                    console.log('num=>', itemsData.getDocs().length)
                   }
                 }
               }
