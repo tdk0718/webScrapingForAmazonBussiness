@@ -10,6 +10,7 @@ import 'firebase/functions'
 import { exit } from 'process'
 // import { itemsData } from './src/db/modules/item'
 // import { getDriver } from './src/helper/seleniumHelper'
+import { getKeepaInfo } from './keepaInfo'
 
 const app = Firebase.initializeApp({
   apiKey: 'AIzaSyCj9Vxn7bQCy80iwxR8fB3HA9iGgySUrBI',
@@ -251,13 +252,21 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
     driver[2] = await new Builder().withCapabilities(capabilities).build()
     driver[3] = await new Builder().withCapabilities(capabilities).build()
 
-    const driverInUS = await new Builder().withCapabilities(capabilities).build()
-    await driverInUS.get('https://keepa.com/#')
-    await driverInUS.wait(until.elementLocated(By.id('panelUserRegisterLogin')), 10000)
-    await driverInUS.findElement(By.id('panelUserRegisterLogin')).click()
-    await driverInUS.findElement(By.id('username')).sendKeys('t.matsushita0718@gmail.com')
-    await driverInUS.findElement(By.id('password')).sendKeys('tadaki4281')
-    await driverInUS.findElement(By.id('submitLogin')).click()
+    const driverInKeepa = await new Builder().withCapabilities(capabilities).build()
+    await driverInKeepa.get('https://keepa.com/#')
+    await driverInKeepa.wait(until.elementLocated(By.id('panelUserRegisterLogin')), 10000)
+    await driverInKeepa.findElement(By.id('panelUserRegisterLogin')).click()
+    await driverInKeepa.findElement(By.id('username')).sendKeys('t.matsushita0718@gmail.com')
+    await driverInKeepa.findElement(By.id('password')).sendKeys('tadaki4281')
+    await driverInKeepa.findElement(By.id('submitLogin')).click()
+
+    const driverInKeepaInJP = await new Builder().withCapabilities(capabilities).build()
+    await driverInKeepaInJP.get('https://keepa.com/#')
+    await driverInKeepaInJP.wait(until.elementLocated(By.id('panelUserRegisterLogin')), 10000)
+    await driverInKeepaInJP.findElement(By.id('panelUserRegisterLogin')).click()
+    await driverInKeepaInJP.findElement(By.id('username')).sendKeys('t.matsushita0718@gmail.com')
+    await driverInKeepaInJP.findElement(By.id('password')).sendKeys('tadaki4281')
+    await driverInKeepaInJP.findElement(By.id('submitLogin')).click()
 
     const ref = await db.collection(`Items/${currentDate}/Items`)
 
@@ -449,25 +458,25 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                 priceInJp = priceInJp.replace(/,/g, '').replace('￥', '')
 
                 if (Number(priceInJp) > 3000 && !itemsData.getDocById(asin)?.id) {
-                  await driverInUS.get('https://keepa.com/#!product/1-' + asin)
+                  await driverInKeepa.get('https://keepa.com/#!product/1-' + asin)
 
                   try {
-                    await driverInUS.wait(until.elementLocated(By.css('span.priceNew')), 1000)
+                    await driverInKeepa.wait(until.elementLocated(By.css('span.priceNew')), 1000)
 
-                    const amazonPriceInUSNumber = await driverInUS.findElements(
+                    const amazonPriceInUSNumber = await driverInKeepa.findElements(
                       By.css('span.priceAmazon')
                     )
 
-                    const newPriceInUSNumber = await driverInUS.findElements(
+                    const newPriceInUSNumber = await driverInKeepa.findElements(
                       By.css('span.priceNew')
                     )
 
                     if (amazonPriceInUSNumber.length || newPriceInUSNumber.length) {
                       const amazonPriceInUS = amazonPriceInUSNumber.length
-                        ? await driverInUS.findElement(By.css('span.priceAmazon')).getText()
+                        ? await driverInKeepa.findElement(By.css('span.priceAmazon')).getText()
                         : ''
                       const newPriceInUS = newPriceInUSNumber.length
-                        ? await driverInUS.findElement(By.css('span.priceNew')).getText()
+                        ? await driverInKeepa.findElement(By.css('span.priceNew')).getText()
                         : ''
 
                       result.priceInJp = Number(priceInJp)
@@ -505,14 +514,20 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                       result.linkInUS = 'https://amazon.com/dp/' + asin
                       result.keyword = putKeyword
                       result.categoryNode = node
-                      result.amazonPriceInUS = amazonPriceInUS
-                      result.newPriceInUS = newPriceInUS
+                      result.amazonPriceInUS = Number(
+                        amazonPriceInUS.replace('$ ', '').replace(/,/g, '')
+                      )
+                      console.log(newPriceInUS)
+                      result.newPriceInUS = Number(newPriceInUS.replace('$ ', '').replace(/,/g, ''))
                       // Call eachItemInfoAtUsa(n, driver02)
 
                       result.created_at = today
                       result.category = categories[t].keyword
                       result.accessId = accessId
                       result.ranking = 0
+
+                      const keepaInJP = await getKeepaInfo(driverInKeepaInJP, result)
+                      result = { ...result, ...keepaInJP.result }
 
                       await ref.doc(result.asin).set(result)
 
