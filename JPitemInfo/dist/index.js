@@ -202,6 +202,13 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
     driver[1] = await new Builder().withCapabilities(capabilities).build();
     driver[2] = await new Builder().withCapabilities(capabilities).build();
     driver[3] = await new Builder().withCapabilities(capabilities).build();
+    const driverInUS = await new Builder().withCapabilities(capabilities).build();
+    await driverInUS.get("https://keepa.com/#");
+    await driverInUS.wait(until.elementLocated(By.id("panelUserRegisterLogin")), 1e4);
+    await driverInUS.findElement(By.id("panelUserRegisterLogin")).click();
+    await driverInUS.findElement(By.id("username")).sendKeys("t.matsushita0718@gmail.com");
+    await driverInUS.findElement(By.id("password")).sendKeys("tadaki4281");
+    await driverInUS.findElement(By.id("submitLogin")).click();
     const ref = await db.collection(`Items/${currentDate}/Items`);
     let logsDataObj;
     logsDataObj = logsData.getLatestDoc();
@@ -290,24 +297,37 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
                 let priceInJp = await driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole")).getText();
                 priceInJp = priceInJp.replace(/,/g, "").replace("\uFFE5", "");
                 if (Number(priceInJp) > 3e3 && !((_c = itemsData.getDocById(asin)) == null ? void 0 : _c.id)) {
-                  result.priceInJp = Number(priceInJp);
-                  const title = driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a"));
-                  const stars = await driver[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") i.a-icon.a-icon-star-small.aok-align-bottom span.a-icon-alt"));
-                  const text = await title.getText();
-                  result.title = text;
-                  result.link = "https://amazon.co.jp/dp/" + asin;
-                  result.asin = asin;
-                  result.id = asin;
-                  result.linkInUS = "https://amazon.com/dp/" + asin;
-                  result.keyword = putKeyword;
-                  result.categoryNode = node;
-                  result.created_at = today;
-                  result.category = categories[t].keyword;
-                  result.accessId = accessId;
-                  result.ranking = 0;
-                  await ref.doc(result.asin).set(result);
-                  console.log(result);
-                  console.log("num=>", itemsData.getDocs().length);
+                  await driverInUS.get("https://keepa.com/#!product/1-" + asin);
+                  try {
+                    await driverInUS.wait(until.elementLocated(By.css("span.productTableDescriptionPrice.priceAmazon")), 1e3);
+                    const amazonPriceInUSNumber = await driverInUS.findElements(By.css("span.productTableDescriptionPrice.priceAmazon"));
+                    const newPriceInUSNumber = await driverInUS.findElements(By.css("span.productTableDescriptionPriceAlt.priceNew"));
+                    if (amazonPriceInUSNumber.length || newPriceInUSNumber.length) {
+                      const amazonPriceInUS = amazonPriceInUSNumber.length ? await driverInUS.findElement(By.css("span.productTableDescriptionPrice.priceAmazon")).getText() : "";
+                      const newPriceInUS = newPriceInUSNumber.length ? await driverInUS.findElement(By.css("span.productTableDescriptionPriceAlt.priceNew")).getText() : "";
+                      result.priceInJp = Number(priceInJp);
+                      const title = driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a"));
+                      const stars = await driver[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") i.a-icon.a-icon-star-small.aok-align-bottom span.a-icon-alt"));
+                      const text = await title.getText();
+                      result.title = text;
+                      result.link = "https://amazon.co.jp/dp/" + asin;
+                      result.asin = asin;
+                      result.id = asin;
+                      result.linkInUS = "https://amazon.com/dp/" + asin;
+                      result.keyword = putKeyword;
+                      result.categoryNode = node;
+                      result.amazonPriceInUS = amazonPriceInUS;
+                      result.newPriceInUS = newPriceInUS;
+                      result.created_at = today;
+                      result.category = categories[t].keyword;
+                      result.accessId = accessId;
+                      result.ranking = 0;
+                      await ref.doc(result.asin).set(result);
+                      console.log(result);
+                      console.log("num=>", itemsData.getDocs().length);
+                    }
+                  } catch (e) {
+                  }
                 }
               }
               isFirstLoad = false;

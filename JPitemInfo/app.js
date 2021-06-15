@@ -251,6 +251,14 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
     driver[2] = await new Builder().withCapabilities(capabilities).build()
     driver[3] = await new Builder().withCapabilities(capabilities).build()
 
+    const driverInUS = await new Builder().withCapabilities(capabilities).build()
+    await driverInUS.get('https://keepa.com/#')
+    await driverInUS.wait(until.elementLocated(By.id('panelUserRegisterLogin')), 10000)
+    await driverInUS.findElement(By.id('panelUserRegisterLogin')).click()
+    await driverInUS.findElement(By.id('username')).sendKeys('t.matsushita0718@gmail.com')
+    await driverInUS.findElement(By.id('password')).sendKeys('tadaki4281')
+    await driverInUS.findElement(By.id('submitLogin')).click()
+
     const ref = await db.collection(`Items/${currentDate}/Items`)
 
     let logsDataObj
@@ -441,41 +449,72 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                 priceInJp = priceInJp.replace(/,/g, '').replace('￥', '')
 
                 if (Number(priceInJp) > 3000 && !itemsData.getDocById(asin)?.id) {
-                  result.priceInJp = Number(priceInJp)
-                  const title = driver[n].findElement(
-                    By.css('.s-result-item.s-asin:nth-child(' + i + ') h2.a-color-base > a')
-                  )
+                  await driverInUS.get('https://keepa.com/#!product/1-' + asin)
 
-                  const stars = await driver[n].findElements(
-                    By.css(
-                      '.s-result-item.s-asin:nth-child(' +
-                        i +
-                        ') i.a-icon.a-icon-star-small.aok-align-bottom span.a-icon-alt'
+                  try {
+                    await driverInUS.wait(
+                      until.elementLocated(By.css('span.productTableDescriptionPrice.priceAmazon')),
+                      1000
                     )
-                  )
 
-                  const text = await title.getText()
-                  result.title = text
+                    const amazonPriceInUSNumber = await driverInUS.findElements(
+                      By.css('span.productTableDescriptionPrice.priceAmazon')
+                    )
 
-                  result.link = 'https://amazon.co.jp/dp/' + asin
+                    const newPriceInUSNumber = await driverInUS.findElements(
+                      By.css('span.productTableDescriptionPriceAlt.priceNew')
+                    )
 
-                  result.asin = asin
-                  result.id = asin
-                  result.linkInUS = 'https://amazon.com/dp/' + asin
-                  result.keyword = putKeyword
-                  result.categoryNode = node
+                    if (amazonPriceInUSNumber.length || newPriceInUSNumber.length) {
+                      const amazonPriceInUS = amazonPriceInUSNumber.length
+                        ? await driverInUS
+                            .findElement(By.css('span.productTableDescriptionPrice.priceAmazon'))
+                            .getText()
+                        : ''
+                      const newPriceInUS = newPriceInUSNumber.length
+                        ? await driverInUS
+                            .findElement(By.css('span.productTableDescriptionPriceAlt.priceNew'))
+                            .getText()
+                        : ''
 
-                  // Call eachItemInfoAtUsa(n, driver02)
+                      result.priceInJp = Number(priceInJp)
+                      const title = driver[n].findElement(
+                        By.css('.s-result-item.s-asin:nth-child(' + i + ') h2.a-color-base > a')
+                      )
 
-                  result.created_at = today
-                  result.category = categories[t].keyword
-                  result.accessId = accessId
-                  result.ranking = 0
+                      const stars = await driver[n].findElements(
+                        By.css(
+                          '.s-result-item.s-asin:nth-child(' +
+                            i +
+                            ') i.a-icon.a-icon-star-small.aok-align-bottom span.a-icon-alt'
+                        )
+                      )
 
-                  await ref.doc(result.asin).set(result)
+                      const text = await title.getText()
+                      result.title = text
 
-                  console.log(result)
-                  console.log('num=>', itemsData.getDocs().length)
+                      result.link = 'https://amazon.co.jp/dp/' + asin
+
+                      result.asin = asin
+                      result.id = asin
+                      result.linkInUS = 'https://amazon.com/dp/' + asin
+                      result.keyword = putKeyword
+                      result.categoryNode = node
+                      result.amazonPriceInUS = amazonPriceInUS
+                      result.newPriceInUS = newPriceInUS
+                      // Call eachItemInfoAtUsa(n, driver02)
+
+                      result.created_at = today
+                      result.category = categories[t].keyword
+                      result.accessId = accessId
+                      result.ranking = 0
+
+                      await ref.doc(result.asin).set(result)
+
+                      console.log(result)
+                      console.log('num=>', itemsData.getDocs().length)
+                    }
+                  } catch (e) {}
                 }
               }
               isFirstLoad = false
