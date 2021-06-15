@@ -488,10 +488,10 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                     if (amazonPriceInUSNumber.length || newPriceInUSNumber.length) {
                       const amazonPriceInUS = amazonPriceInUSNumber.length
                         ? await driverInKeepa.findElement(By.css('span.priceAmazon')).getText()
-                        : ''
+                        : await driverInKeepa.findElement(By.css('span.priceNew')).getText()
                       const newPriceInUS = newPriceInUSNumber.length
                         ? await driverInKeepa.findElement(By.css('span.priceNew')).getText()
-                        : ''
+                        : amazonPriceInUS
 
                       const USTitle =
                         (await driverInKeepa
@@ -545,6 +545,8 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                       result.dolen = Number(dolen)
                       result.amazonPriceInUSToYen = result.dolen * result.amazonPriceInUS
                       result.newPriceInUSToYen = result.dolen * result.newPriceInUS
+                      let usPriceToJP = 0
+
                       result.deffPrice =
                         result.amazonPriceInUSToYen < result.newPriceInUSToYen
                           ? result.priceInJp - result.amazonPriceInUSToYen
