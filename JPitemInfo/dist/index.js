@@ -299,17 +299,19 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
                 if (Number(priceInJp) > 3e3 && !((_c = itemsData.getDocById(asin)) == null ? void 0 : _c.id)) {
                   await driverInUS.get("https://keepa.com/#!product/1-" + asin);
                   try {
-                    await driverInUS.wait(until.elementLocated(By.css("span.productTableDescriptionPrice.priceAmazon")), 1e3);
-                    const amazonPriceInUSNumber = await driverInUS.findElements(By.css("span.productTableDescriptionPrice.priceAmazon"));
-                    const newPriceInUSNumber = await driverInUS.findElements(By.css("span.productTableDescriptionPriceAlt.priceNew"));
+                    await driverInUS.wait(until.elementLocated(By.css("span.priceNew")), 1e3);
+                    const amazonPriceInUSNumber = await driverInUS.findElements(By.css("span.priceAmazon"));
+                    const newPriceInUSNumber = await driverInUS.findElements(By.css("span.priceNew"));
                     if (amazonPriceInUSNumber.length || newPriceInUSNumber.length) {
-                      const amazonPriceInUS = amazonPriceInUSNumber.length ? await driverInUS.findElement(By.css("span.productTableDescriptionPrice.priceAmazon")).getText() : "";
-                      const newPriceInUS = newPriceInUSNumber.length ? await driverInUS.findElement(By.css("span.productTableDescriptionPriceAlt.priceNew")).getText() : "";
+                      const amazonPriceInUS = amazonPriceInUSNumber.length ? await driverInUS.findElement(By.css("span.priceAmazon")).getText() : "";
+                      const newPriceInUS = newPriceInUSNumber.length ? await driverInUS.findElement(By.css("span.priceNew")).getText() : "";
                       result.priceInJp = Number(priceInJp);
                       const title = driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a"));
-                      const stars = await driver[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") i.a-icon.a-icon-star-small.aok-align-bottom span.a-icon-alt"));
+                      const stars = await driver[n].findElements(By.css(".s-result-item.s-asin:nth-child(" + i + ") i.a-icon-star-small span.a-icon-alt"));
+                      const star = stars.length ? await driver[n].findElement(By.css(".s-result-item.s-asin:nth-child(" + i + ") i.a-icon-star-small span.a-icon-alt")).getText() : "";
                       const text = await title.getText();
                       result.title = text;
+                      result.star = Number(star.replace("5\u3064\u661F\u306E\u3046\u3061", ""));
                       result.link = "https://amazon.co.jp/dp/" + asin;
                       result.asin = asin;
                       result.id = asin;

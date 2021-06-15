@@ -452,29 +452,22 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                   await driverInUS.get('https://keepa.com/#!product/1-' + asin)
 
                   try {
-                    await driverInUS.wait(
-                      until.elementLocated(By.css('span.productTableDescriptionPrice.priceAmazon')),
-                      1000
-                    )
+                    await driverInUS.wait(until.elementLocated(By.css('span.priceNew')), 1000)
 
                     const amazonPriceInUSNumber = await driverInUS.findElements(
-                      By.css('span.productTableDescriptionPrice.priceAmazon')
+                      By.css('span.priceAmazon')
                     )
 
                     const newPriceInUSNumber = await driverInUS.findElements(
-                      By.css('span.productTableDescriptionPriceAlt.priceNew')
+                      By.css('span.priceNew')
                     )
 
                     if (amazonPriceInUSNumber.length || newPriceInUSNumber.length) {
                       const amazonPriceInUS = amazonPriceInUSNumber.length
-                        ? await driverInUS
-                            .findElement(By.css('span.productTableDescriptionPrice.priceAmazon'))
-                            .getText()
+                        ? await driverInUS.findElement(By.css('span.priceAmazon')).getText()
                         : ''
                       const newPriceInUS = newPriceInUSNumber.length
-                        ? await driverInUS
-                            .findElement(By.css('span.productTableDescriptionPriceAlt.priceNew'))
-                            .getText()
+                        ? await driverInUS.findElement(By.css('span.priceNew')).getText()
                         : ''
 
                       result.priceInJp = Number(priceInJp)
@@ -486,12 +479,24 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                         By.css(
                           '.s-result-item.s-asin:nth-child(' +
                             i +
-                            ') i.a-icon.a-icon-star-small.aok-align-bottom span.a-icon-alt'
+                            ') i.a-icon-star-small span.a-icon-alt'
                         )
                       )
+                      const star = stars.length
+                        ? await driver[n]
+                            .findElement(
+                              By.css(
+                                '.s-result-item.s-asin:nth-child(' +
+                                  i +
+                                  ') i.a-icon-star-small span.a-icon-alt'
+                              )
+                            )
+                            .getText()
+                        : ''
 
                       const text = await title.getText()
                       result.title = text
+                      result.star = Number(star.replace('5つ星のうち', ''))
 
                       result.link = 'https://amazon.co.jp/dp/' + asin
 
