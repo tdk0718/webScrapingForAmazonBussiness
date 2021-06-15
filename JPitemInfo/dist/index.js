@@ -405,16 +405,12 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
                 if (Number(priceInJp) > 3500 && !((_c = itemsData.getDocById(asin)) == null ? void 0 : _c.id)) {
                   await driverInKeepa.get("https://keepa.com/#!product/1-" + asin);
                   try {
-                    await driverInKeepa.wait(until2.elementLocated(By2.css("span.priceNewsss")), 3e3);
-                  } catch (e) {
-                  }
-                  try {
                     await driverInKeepa.wait(until2.elementLocated(By2.css("span.priceNew")), 1e3);
                     const amazonPriceInUSNumber = await driverInKeepa.findElements(By2.css("span.priceAmazon"));
                     const newPriceInUSNumber = await driverInKeepa.findElements(By2.css("span.priceNew"));
                     if (amazonPriceInUSNumber.length || newPriceInUSNumber.length) {
-                      const amazonPriceInUS = amazonPriceInUSNumber.length ? await driverInKeepa.findElement(By2.css("span.priceAmazon")).getText() : 0;
-                      const newPriceInUS = newPriceInUSNumber.length ? await driverInKeepa.findElement(By2.css("span.priceNew")).getText() : 0;
+                      const amazonPriceInUS = amazonPriceInUSNumber.length ? await driverInKeepa.findElement(By2.css("span.priceAmazon")).getText() : "";
+                      const newPriceInUS = newPriceInUSNumber.length ? await driverInKeepa.findElement(By2.css("span.priceNew")).getText() : "";
                       const USTitle = await driverInKeepa.findElement(By2.css("#productInfoBox > .productTableDescriptionTitle")).getText() || "";
                       result.priceInJp = Number(priceInJp);
                       const title = driver[n].findElement(By2.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a"));
@@ -441,6 +437,7 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
                       result.category = categories[t].keyword;
                       result.accessId = accessId;
                       result.ranking = 0;
+                      console.log(result);
                       if (result.deffPrice > 3e3 && USTitle) {
                         const keepaInJP = await getKeepaInfo(driverInKeepaInJP, result);
                         result = __spreadValues(__spreadValues({}, result), keepaInJP.result);
@@ -450,6 +447,7 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
                       console.log("num=>", itemsData.getDocs().length);
                     }
                   } catch (e) {
+                    console.log(e);
                   }
                 }
               }

@@ -471,9 +471,9 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
 
                 if (Number(priceInJp) > 3500 && !itemsData.getDocById(asin)?.id) {
                   await driverInKeepa.get('https://keepa.com/#!product/1-' + asin)
-                  try {
-                    await driverInKeepa.wait(until.elementLocated(By.css('span.priceNewsss')), 1000)
-                  } catch (e) {}
+                  // try {
+                  //   await driverInKeepa.wait(until.elementLocated(By.css('span.priceNewsss')), 1000)
+                  // } catch (e) {}
                   try {
                     await driverInKeepa.wait(until.elementLocated(By.css('span.priceNew')), 1000)
 
@@ -488,10 +488,10 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                     if (amazonPriceInUSNumber.length || newPriceInUSNumber.length) {
                       const amazonPriceInUS = amazonPriceInUSNumber.length
                         ? await driverInKeepa.findElement(By.css('span.priceAmazon')).getText()
-                        : 0
+                        : ''
                       const newPriceInUS = newPriceInUSNumber.length
                         ? await driverInKeepa.findElement(By.css('span.priceNew')).getText()
-                        : 0
+                        : ''
 
                       const USTitle =
                         (await driverInKeepa
@@ -553,6 +553,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                       result.category = categories[t].keyword
                       result.accessId = accessId
                       result.ranking = 0
+                      console.log(result)
 
                       if (result.deffPrice > 3000 && USTitle) {
                         const keepaInJP = await getKeepaInfo(driverInKeepaInJP, result)
@@ -564,7 +565,9 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                       }
                       console.log('num=>', itemsData.getDocs().length)
                     }
-                  } catch (e) {}
+                  } catch (e) {
+                    console.log(e)
+                  }
                 }
               }
               isFirstLoad = false
