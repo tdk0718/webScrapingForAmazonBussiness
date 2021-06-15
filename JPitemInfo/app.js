@@ -252,6 +252,18 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
     driver[2] = await new Builder().withCapabilities(capabilities).build()
     driver[3] = await new Builder().withCapabilities(capabilities).build()
 
+    await driver[1].get(
+      'https://www.google.co.jp/search?q=%E3%83%89%E3%83%AB%E3%80%80%E6%97%A5%E6%9C%AC%E3%80%80&newwindow=1&sxsrf=ALeKk02FiS2ljVzmM6I_ssSrneI7HG49fQ%3A1622019947152&ei=aw-uYN7pCOuGr7wPsKqeGA&oq=%E3%83%89%E3%83%AB%E3%80%80%E6%97%A5%E6%9C%AC%E3%80%80&gs_lcp=Cgdnd3Mtd2l6EAMyBQgAEMQCMgYIABAHEB4yBggAEAcQHjIGCAAQBxAeMgYIABAHEB4yBggAEAcQHjIGCAAQBxAeMgYIABAHEB46CQgAELADEAQQJToJCAAQsAMQBxAeOgQIIxAnOggIABCxAxCDAToFCAAQsQNQ1hhY4SRgkShoAXAAeACAAcQBiAG5BZIBAzAuNJgBAKABAaABAqoBB2d3cy13aXrIAQjAAQE&sclient=gws-wiz&ved=0ahUKEwiey5KW_-bwAhVrw4sBHTCVBwMQ4dUDCA4&uact=5'
+    )
+
+    const dolen = await driver[1]
+      .findElement(
+        By.css(
+          '#knowledge-currency__updatable-data-column > div:nth-child(1) > div:nth-child(2) > span:nth-child(1)'
+        )
+      )
+      .getText()
+
     const driverInKeepa = await new Builder().withCapabilities(capabilities).build()
     await driverInKeepa.get('https://keepa.com/#')
     await driverInKeepa.wait(until.elementLocated(By.id('panelUserRegisterLogin')), 10000)
@@ -474,10 +486,10 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                     if (amazonPriceInUSNumber.length || newPriceInUSNumber.length) {
                       const amazonPriceInUS = amazonPriceInUSNumber.length
                         ? await driverInKeepa.findElement(By.css('span.priceAmazon')).getText()
-                        : ''
+                        : 0
                       const newPriceInUS = newPriceInUSNumber.length
                         ? await driverInKeepa.findElement(By.css('span.priceNew')).getText()
-                        : ''
+                        : 0
 
                       result.priceInJp = Number(priceInJp)
                       const title = driver[n].findElement(
@@ -522,6 +534,9 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                       // Call eachItemInfoAtUsa(n, driver02)
 
                       result.created_at = today
+                      result.dolen = Number(dolen)
+                      result.amazonPriceInUSToYen = result.dolen * result.amazonPriceInUS
+                      result.newPriceInUSToYen = result.dolen * result.newPriceInUS
                       result.category = categories[t].keyword
                       result.accessId = accessId
                       result.ranking = 0

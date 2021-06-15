@@ -299,6 +299,8 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
     driver[1] = await new Builder2().withCapabilities(capabilities).build();
     driver[2] = await new Builder2().withCapabilities(capabilities).build();
     driver[3] = await new Builder2().withCapabilities(capabilities).build();
+    await driver[1].get("https://www.google.co.jp/search?q=%E3%83%89%E3%83%AB%E3%80%80%E6%97%A5%E6%9C%AC%E3%80%80&newwindow=1&sxsrf=ALeKk02FiS2ljVzmM6I_ssSrneI7HG49fQ%3A1622019947152&ei=aw-uYN7pCOuGr7wPsKqeGA&oq=%E3%83%89%E3%83%AB%E3%80%80%E6%97%A5%E6%9C%AC%E3%80%80&gs_lcp=Cgdnd3Mtd2l6EAMyBQgAEMQCMgYIABAHEB4yBggAEAcQHjIGCAAQBxAeMgYIABAHEB4yBggAEAcQHjIGCAAQBxAeMgYIABAHEB46CQgAELADEAQQJToJCAAQsAMQBxAeOgQIIxAnOggIABCxAxCDAToFCAAQsQNQ1hhY4SRgkShoAXAAeACAAcQBiAG5BZIBAzAuNJgBAKABAaABAqoBB2d3cy13aXrIAQjAAQE&sclient=gws-wiz&ved=0ahUKEwiey5KW_-bwAhVrw4sBHTCVBwMQ4dUDCA4&uact=5");
+    const dolen = await driver[1].findElement(By2.css("#knowledge-currency__updatable-data-column > div:nth-child(1) > div:nth-child(2) > span:nth-child(1)")).getText();
     const driverInKeepa = await new Builder2().withCapabilities(capabilities).build();
     await driverInKeepa.get("https://keepa.com/#");
     await driverInKeepa.wait(until2.elementLocated(By2.id("panelUserRegisterLogin")), 1e4);
@@ -407,8 +409,8 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
                     const amazonPriceInUSNumber = await driverInKeepa.findElements(By2.css("span.priceAmazon"));
                     const newPriceInUSNumber = await driverInKeepa.findElements(By2.css("span.priceNew"));
                     if (amazonPriceInUSNumber.length || newPriceInUSNumber.length) {
-                      const amazonPriceInUS = amazonPriceInUSNumber.length ? await driverInKeepa.findElement(By2.css("span.priceAmazon")).getText() : "";
-                      const newPriceInUS = newPriceInUSNumber.length ? await driverInKeepa.findElement(By2.css("span.priceNew")).getText() : "";
+                      const amazonPriceInUS = amazonPriceInUSNumber.length ? await driverInKeepa.findElement(By2.css("span.priceAmazon")).getText() : 0;
+                      const newPriceInUS = newPriceInUSNumber.length ? await driverInKeepa.findElement(By2.css("span.priceNew")).getText() : 0;
                       result.priceInJp = Number(priceInJp);
                       const title = driver[n].findElement(By2.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a"));
                       const stars = await driver[n].findElements(By2.css(".s-result-item.s-asin:nth-child(" + i + ") i.a-icon-star-small span.a-icon-alt"));
@@ -426,6 +428,9 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
                       console.log(newPriceInUS);
                       result.newPriceInUS = Number(newPriceInUS.replace("$ ", "").replace(/,/g, ""));
                       result.created_at = today;
+                      result.dolen = Number(dolen);
+                      result.amazonPriceInUSToYen = result.dolen * result.amazonPriceInUS;
+                      result.newPriceInUSToYen = result.dolen * result.newPriceInUS;
                       result.category = categories[t].keyword;
                       result.accessId = accessId;
                       result.ranking = 0;
