@@ -230,28 +230,30 @@ const keywordData = {
 const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外', '北米', '国名', '日本未発売']
 
 async function getAmazonInfo() {
+  const accessId = createNewAccessId()
+  let isFirstLoad = true
+  let isExistTodayLog = false
+
+  let isFinishGetForThisNode = false
+
+  console.log('start')
+
+  // await categoriesData.stream()
+  await logsData.stream()
+
+  const logRef = await db.collection(`Logs/${currentDate}/Logs`)
+  const capabilities = webdriver.Capabilities.chrome()
+  capabilities.set('chromeOptions', {
+    args: ['--headless', '--no-sandbox', '--disable-gpu', `--window-size=1980,1200`],
+  })
+  const driver = []
+  driver[1] = await new Builder().withCapabilities(capabilities).build()
+  driver[2] = await new Builder().withCapabilities(capabilities).build()
+  driver[3] = await new Builder().withCapabilities(capabilities).build()
+  const driverInKeepa = await new Builder().withCapabilities(capabilities).build()
+  const driverInKeepaInJP = await new Builder().withCapabilities(capabilities).build()
+
   try {
-    const accessId = createNewAccessId()
-    let isFirstLoad = true
-    let isExistTodayLog = false
-
-    let isFinishGetForThisNode = false
-
-    console.log('start')
-
-    // await categoriesData.stream()
-    await logsData.stream()
-
-    const logRef = await db.collection(`Logs/${currentDate}/Logs`)
-    const capabilities = webdriver.Capabilities.chrome()
-    capabilities.set('chromeOptions', {
-      args: ['--headless', '--no-sandbox', '--disable-gpu', `--window-size=1980,1200`],
-    })
-    const driver = []
-    driver[1] = await new Builder().withCapabilities(capabilities).build()
-    driver[2] = await new Builder().withCapabilities(capabilities).build()
-    driver[3] = await new Builder().withCapabilities(capabilities).build()
-
     await driver[1].get(
       'https://www.google.co.jp/search?q=%E3%83%89%E3%83%AB%E3%80%80%E6%97%A5%E6%9C%AC%E3%80%80&newwindow=1&sxsrf=ALeKk02FiS2ljVzmM6I_ssSrneI7HG49fQ%3A1622019947152&ei=aw-uYN7pCOuGr7wPsKqeGA&oq=%E3%83%89%E3%83%AB%E3%80%80%E6%97%A5%E6%9C%AC%E3%80%80&gs_lcp=Cgdnd3Mtd2l6EAMyBQgAEMQCMgYIABAHEB4yBggAEAcQHjIGCAAQBxAeMgYIABAHEB4yBggAEAcQHjIGCAAQBxAeMgYIABAHEB46CQgAELADEAQQJToJCAAQsAMQBxAeOgQIIxAnOggIABCxAxCDAToFCAAQsQNQ1hhY4SRgkShoAXAAeACAAcQBiAG5BZIBAzAuNJgBAKABAaABAqoBB2d3cy13aXrIAQjAAQE&sclient=gws-wiz&ved=0ahUKEwiey5KW_-bwAhVrw4sBHTCVBwMQ4dUDCA4&uact=5'
     )
@@ -264,7 +266,6 @@ async function getAmazonInfo() {
       )
       .getText()
 
-    const driverInKeepa = await new Builder().withCapabilities(capabilities).build()
     await driverInKeepa.get('https://keepa.com/#')
     await driverInKeepa.wait(until.elementLocated(By.id('panelUserRegisterLogin')), 10000)
     await driverInKeepa.findElement(By.id('panelUserRegisterLogin')).click()
@@ -272,7 +273,6 @@ async function getAmazonInfo() {
     await driverInKeepa.findElement(By.id('password')).sendKeys('tadaki4281')
     await driverInKeepa.findElement(By.id('submitLogin')).click()
 
-    const driverInKeepaInJP = await new Builder().withCapabilities(capabilities).build()
     await driverInKeepaInJP.get('https://keepa.com/#')
     await driverInKeepaInJP.wait(until.elementLocated(By.id('panelUserRegisterLogin')), 10000)
     await driverInKeepaInJP.findElement(By.id('panelUserRegisterLogin')).click()
@@ -602,8 +602,15 @@ async function getAmazonInfo() {
     driver[1].quit()
     driver[2].quit()
     driver[3].quit()
+    driverInKeepaInJP.quit()
+    driverInKeepa.quit()
   } catch (err) {
     console.log(err)
+    driver[1].quit()
+    driver[2].quit()
+    driver[3].quit()
+    driverInKeepaInJP.quit()
+    driverInKeepa.quit()
     getAmazonInfo()
   }
 
