@@ -6,7 +6,7 @@ export async function getKeepaInfo(driver, infoObject) {
     if (infoObject.id) {
       await driver.get('https://keepa.com/#!product/5-' + infoObject.id)
       try {
-        await driver.wait(until.elementLocated(By.id('statisticss')), 5000)
+        await driver.wait(until.elementLocated(By.id('statisticss')), 2000)
       } catch (e) {
         console.log(e)
       }

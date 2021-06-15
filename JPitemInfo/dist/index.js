@@ -136,7 +136,7 @@ var app = import_app.default.initializeApp({
 });
 var db = import_app.default.firestore(app);
 var current = new Date();
-var currentDate = current.getFullYear() + "-" + (current.getMonth() + 1) + "-" + current.getDate();
+var currentDate = current.getFullYear() + "-" + (current.getMonth() + 1);
 function createNewAccessId() {
   const LENGTH = 20;
   const SOURCE = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUWXYZ0123456789";
@@ -402,7 +402,7 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
               if (priceExist.length) {
                 let priceInJp = await driver[n].findElement(By2.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole")).getText();
                 priceInJp = priceInJp.replace(/,/g, "").replace("\uFFE5", "");
-                if (Number(priceInJp) > 3e3 && !((_c = itemsData.getDocById(asin)) == null ? void 0 : _c.id)) {
+                if (Number(priceInJp) > 3500 && !((_c = itemsData.getDocById(asin)) == null ? void 0 : _c.id)) {
                   await driverInKeepa.get("https://keepa.com/#!product/1-" + asin);
                   try {
                     await driverInKeepa.wait(until2.elementLocated(By2.css("span.priceNew")), 1e3);
@@ -431,13 +431,16 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
                       result.dolen = Number(dolen);
                       result.amazonPriceInUSToYen = result.dolen * result.amazonPriceInUS;
                       result.newPriceInUSToYen = result.dolen * result.newPriceInUS;
+                      result.deffPrice = result.amazonPriceInUSToYen < result.newPriceInUSToYen ? result.priceInJp - result.amazonPriceInUSToYen : result.priceInJp - result.newPriceInUSToYen;
                       result.category = categories[t].keyword;
                       result.accessId = accessId;
                       result.ranking = 0;
-                      const keepaInJP = await getKeepaInfo(driverInKeepaInJP, result);
-                      result = __spreadValues(__spreadValues({}, result), keepaInJP.result);
-                      await ref.doc(result.asin).set(result);
-                      console.log(result);
+                      if (result.deffPrice > 3e3) {
+                        const keepaInJP = await getKeepaInfo(driverInKeepaInJP, result);
+                        result = __spreadValues(__spreadValues({}, result), keepaInJP.result);
+                        await ref.doc(result.asin).set(result);
+                        console.log(result);
+                      }
                       console.log("num=>", itemsData.getDocs().length);
                     }
                   } catch (e) {

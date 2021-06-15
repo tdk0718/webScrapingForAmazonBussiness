@@ -26,7 +26,7 @@ import { sort } from 'fast-sort'
 const db = Firebase.firestore(app)
 
 const current = new Date()
-const currentDate = current.getFullYear() + '-' + (current.getMonth() + 1) + '-' + current.getDate()
+const currentDate = current.getFullYear() + '-' + (current.getMonth() + 1)
 
 //TODO 新しいランダムIDを生成する関数
 function createNewAccessId() {
@@ -469,7 +469,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                   .getText()
                 priceInJp = priceInJp.replace(/,/g, '').replace('￥', '')
 
-                if (Number(priceInJp) > 3000 && !itemsData.getDocById(asin)?.id) {
+                if (Number(priceInJp) > 3500 && !itemsData.getDocById(asin)?.id) {
                   await driverInKeepa.get('https://keepa.com/#!product/1-' + asin)
 
                   try {
@@ -537,16 +537,23 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                       result.dolen = Number(dolen)
                       result.amazonPriceInUSToYen = result.dolen * result.amazonPriceInUS
                       result.newPriceInUSToYen = result.dolen * result.newPriceInUS
+                      result.deffPrice =
+                        result.amazonPriceInUSToYen < result.newPriceInUSToYen
+                          ? result.priceInJp - result.amazonPriceInUSToYen
+                          : result.priceInJp - result.newPriceInUSToYen
+
                       result.category = categories[t].keyword
                       result.accessId = accessId
                       result.ranking = 0
 
-                      const keepaInJP = await getKeepaInfo(driverInKeepaInJP, result)
-                      result = { ...result, ...keepaInJP.result }
+                      if (result.deffPrice > 3000) {
+                        const keepaInJP = await getKeepaInfo(driverInKeepaInJP, result)
+                        result = { ...result, ...keepaInJP.result }
 
-                      await ref.doc(result.asin).set(result)
+                        await ref.doc(result.asin).set(result)
 
-                      console.log(result)
+                        console.log(result)
+                      }
                       console.log('num=>', itemsData.getDocs().length)
                     }
                   } catch (e) {}
