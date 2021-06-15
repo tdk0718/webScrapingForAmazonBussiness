@@ -115,12 +115,12 @@ async function getKeepaInfo(driver, infoObject) {
           }
         }
         console.log(result);
-        resolve({ result });
+        resolve(result);
       }
     } catch (e) {
       console.log(e);
     }
-    resolve();
+    resolve({});
   });
 }
 
@@ -283,7 +283,7 @@ var categories = [
   { code: 3450891051, keyword: "\u30C8\u30A4\u30EC\u30D6\u30FC\u30B9\u90E8\u54C1" }
 ];
 var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u30F3\u30DD\u30FC\u30C8", "\u6D77\u5916", "\u5317\u7C73", "\u56FD\u540D", "\u65E5\u672C\u672A\u767A\u58F2"];
-(async () => {
+async function getAmazonInfo() {
   var _a, _b, _c;
   try {
     const accessId = createNewAccessId();
@@ -447,10 +447,9 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
                     result.category = categories[t].keyword;
                     result.accessId = accessId;
                     result.ranking = 0;
-                    console.log(result);
                     if (result.deffPrice > 3e3 && USTitle) {
                       const keepaInJP = await getKeepaInfo(driverInKeepaInJP, result);
-                      result = __spreadValues(__spreadValues({}, result), keepaInJP.result);
+                      result = __spreadValues(__spreadValues({}, result), keepaInJP);
                       await ref.doc(result.asin).set(result);
                       console.log(result);
                     }
@@ -481,6 +480,10 @@ var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u3
     driver[3].quit();
   } catch (err) {
     console.log(err);
+    getAmazonInfo();
   }
   return;
+}
+(async () => {
+  await getAmazonInfo();
 })();

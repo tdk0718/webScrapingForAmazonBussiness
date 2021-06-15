@@ -229,7 +229,7 @@ const keywordData = {
 
 const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外', '北米', '国名', '日本未発売']
 
-;(async () => {
+async function getAmazonInfo() {
   try {
     const accessId = createNewAccessId()
     let isFirstLoad = true
@@ -558,7 +558,7 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
                     result.category = categories[t].keyword
                     result.accessId = accessId
                     result.ranking = 0
-                    console.log(result)
+                    // console.log(result)
 
                     if (result.deffPrice > 3000 && USTitle) {
                       const keepaInJP = await getKeepaInfo(driverInKeepaInJP, result)
@@ -604,7 +604,12 @@ const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外
     driver[3].quit()
   } catch (err) {
     console.log(err)
+    getAmazonInfo()
   }
 
   return
+}
+
+;(async () => {
+  await getAmazonInfo()
 })()
