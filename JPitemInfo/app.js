@@ -573,10 +573,9 @@ async function getAmazonInfo() {
                             Number(result.RankingDrop30) / Number(result.NewItemNum)
                           )
                         }
-                        if (result.itemNumPerSaler30) {
-                          console.log(result)
-                          await ref.doc(result.asin).set(result)
-                        }
+
+                        console.log(result)
+                        await ref.doc(result.asin).set(result)
                       }
                     }
                     console.log('num=>', itemsData.getDocs().length)
