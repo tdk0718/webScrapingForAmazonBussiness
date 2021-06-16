@@ -574,11 +574,10 @@ async function getAmazonInfo() {
                           )
                         }
                         if (result.itemNumPerSaler30) {
+                          console.log(result)
                           await ref.doc(result.asin).set(result)
                         }
                       }
-
-                      console.log(result)
                     }
                     console.log('num=>', itemsData.getDocs().length)
                   }
