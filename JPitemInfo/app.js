@@ -42,17 +42,21 @@ function createNewAccessId() {
 const itemsData = {
   itemDB: [],
   async stream({ node }) {
-    console.log(node)
-    await db
-      .collection('Items')
-      .doc(currentDate)
-      .set({ created_at: current })
-    await db
-      .collection(`Items/${currentDate}/Items`)
-      .where('categoryNode', '==', node)
-      .onSnapshot(res => {
-        this.itemDB = res
-      })
+    try {
+      console.log(node)
+      await db
+        .collection('Items')
+        .doc(currentDate)
+        .set({ created_at: current })
+      await db
+        .collection(`Items/${currentDate}/Items`)
+        .where('categoryNode', '==', node)
+        .onSnapshot(res => {
+          this.itemDB = res
+        })
+    } catch (err) {
+      console.log(err)
+    }
   },
   getDocs() {
     const result = []
@@ -528,9 +532,7 @@ async function getAmazonInfo() {
                     const text = await title.getText()
                     result.title = text
                     result.star = Number(star.replace('5つ星のうち', ''))
-
                     result.link = 'https://amazon.co.jp/dp/' + asin
-
                     result.asin = asin
                     result.id = asin
                     result.linkInUS = 'https://amazon.com/dp/' + asin
