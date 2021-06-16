@@ -564,7 +564,14 @@ async function getAmazonInfo() {
                       const keepaInJP = await getKeepaInfo(driverInKeepaInJP, result)
                       result = { ...result, ...keepaInJP }
                       if (result.RankingDrop30) {
-                        await ref.doc(result.asin).set(result)
+                        if (result.NewItemNum) {
+                          result.itemNumPerSaler30 = Math.floor(
+                            result.RankingDrop30 / result.NewItemNum
+                          )
+                        }
+                        if (result.itemNumPerSaler) {
+                          await ref.doc(result.asin).set(result)
+                        }
                       }
 
                       console.log(result)
