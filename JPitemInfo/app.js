@@ -570,7 +570,7 @@ async function getAmazonInfo() {
                       if (result.RankingDrop30) {
                         if (result.NewItemNum) {
                           result.itemNumPerSaler30 = Math.floor(
-                            result.RankingDrop30 / result.NewItemNum
+                            Number(result.RankingDrop30) / Number(result.NewItemNum)
                           )
                         }
                         if (result.itemNumPerSaler) {
