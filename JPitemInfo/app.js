@@ -570,6 +570,7 @@ async function getAmazonInfo() {
                     }
                     console.log('num=>', itemsData.getDocs().length)
                   }
+                  await driverInKeepa.get('https://keepa.com/#')
                 }
               }
               isFirstLoad = false

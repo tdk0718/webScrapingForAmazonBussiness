@@ -1,7 +1,7 @@
 import webdriver from 'selenium-webdriver'
 const { Builder, By, until } = webdriver
 
-export async function getKeepaInfo(driver, infoObject) {
+export function getKeepaInfo(driver, infoObject) {
   return new Promise(async (resolve, reject) => {
     try {
       if (infoObject.id) {
@@ -131,6 +131,7 @@ export async function getKeepaInfo(driver, infoObject) {
           }
         }
         console.log(result)
+        await driver.get('https://keepa.com/#')
         resolve(result)
       }
     } catch (e) {
