@@ -243,7 +243,9 @@ async function getAmazonInfo() {
   console.log('start')
 
   // await categoriesData.stream()
-  await logsData.stream()
+  if (!logsData.getDocs().length) {
+    await logsData.stream()
+  }
 
   const logRef = await db.collection(`Logs/${currentDate}/Logs`)
   const capabilities = webdriver.Capabilities.chrome()
