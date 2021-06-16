@@ -563,8 +563,9 @@ async function getAmazonInfo() {
                     if (result.deffPrice > 3000 && USTitle) {
                       const keepaInJP = await getKeepaInfo(driverInKeepaInJP, result)
                       result = { ...result, ...keepaInJP }
-
-                      await ref.doc(result.asin).set(result)
+                      if (result.RankingDrop30) {
+                        await ref.doc(result.asin).set(result)
+                      }
 
                       console.log(result)
                     }
