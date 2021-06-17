@@ -243,12 +243,6 @@ async function getAmazonInfo() {
 
   console.log('start')
 
-  // await categoriesData.stream()
-  if (!logsData.getDocs().length) {
-    await logsData.stream()
-  }
-
-  const logRef = await db.collection(`Logs/${currentDate}/Logs`)
   const capabilities = webdriver.Capabilities.chrome()
   capabilities.set('chromeOptions', {
     args: ['--headless', '--no-sandbox', '--disable-gpu', `--window-size=1980,1200`],
@@ -262,6 +256,11 @@ async function getAmazonInfo() {
   const driverForUS = await new Builder().withCapabilities(capabilities).build()
 
   try {
+    // await categoriesData.stream()
+    if (!logsData.getDocs().length) {
+      await logsData.stream()
+    }
+    const logRef = await db.collection(`Logs/${currentDate}/Logs`)
     await driver[1].get(
       'https://www.google.co.jp/search?q=%E3%83%89%E3%83%AB%E3%80%80%E6%97%A5%E6%9C%AC%E3%80%80&newwindow=1&sxsrf=ALeKk02FiS2ljVzmM6I_ssSrneI7HG49fQ%3A1622019947152&ei=aw-uYN7pCOuGr7wPsKqeGA&oq=%E3%83%89%E3%83%AB%E3%80%80%E6%97%A5%E6%9C%AC%E3%80%80&gs_lcp=Cgdnd3Mtd2l6EAMyBQgAEMQCMgYIABAHEB4yBggAEAcQHjIGCAAQBxAeMgYIABAHEB4yBggAEAcQHjIGCAAQBxAeMgYIABAHEB46CQgAELADEAQQJToJCAAQsAMQBxAeOgQIIxAnOggIABCxAxCDAToFCAAQsQNQ1hhY4SRgkShoAXAAeACAAcQBiAG5BZIBAzAuNJgBAKABAaABAqoBB2d3cy13aXrIAQjAAQE&sclient=gws-wiz&ved=0ahUKEwiey5KW_-bwAhVrw4sBHTCVBwMQ4dUDCA4&uact=5'
     )
@@ -572,7 +571,7 @@ async function getAmazonInfo() {
                             Number(result.RankingDrop30) / Number(result.NewItemNum)
                           )
                         }
-                        result.totalPriceFromUS = getAmazonUSInfo(driverForUS, result)
+                        result.totalPriceFromUS = await getAmazonUSInfo(driverForUS, result)
 
                         result.realDeffPrice =
                           result.priceInJp - result.dolen * result.totalPriceFromUS
