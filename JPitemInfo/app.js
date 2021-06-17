@@ -291,7 +291,6 @@ async function getAmazonInfo() {
     let logsDataObj
 
     logsDataObj = logsData.getLatestDoc()
-    console.log(logsDataObj)
 
     const latestLogDate = logsDataObj?.created_at?.seconds
       ? new Date(logsDataObj.created_at.seconds * 1000)
@@ -334,7 +333,7 @@ async function getAmazonInfo() {
         let pageNum = isFirstLoad && isExistTodayLog ? checkLogData.pageNum : 1
         while (pageNum < 1000) {
           const currentLatestLog = logsData.getLatestDoc() || {}
-          console.log(currentLatestLog)
+
           if (j > currentLatestLog.searchTextIndex) {
             j = currentLatestLog.searchTextIndex
             t = currentLatestLog.nodeIndex
@@ -371,7 +370,7 @@ async function getAmazonInfo() {
           const putKeyword = keywords[j]
           const node = categories[t].code
           const n = ((pageNum + 2) % 3) + 1
-          console.log(n)
+
           if (pageNum === 1) {
             driver[1].get(
               'https://www.amazon.co.jp/s?k=' + putKeyword + '&page=' + pageNum + '&node=' + node
@@ -482,9 +481,7 @@ async function getAmazonInfo() {
                   } catch (e) {}
                   try {
                     await driverInKeepa.wait(until.elementLocated(By.css('span.priceNew')), 1000)
-                  } catch (e) {
-                    console.log(e)
-                  }
+                  } catch (e) {}
 
                   const amazonPriceInUSNumber = await driverInKeepa.findElements(
                     By.css('span.priceAmazon')
@@ -543,7 +540,7 @@ async function getAmazonInfo() {
                     result.amazonPriceInUS = Number(
                       amazonPriceInUS.replace('$ ', '').replace(/,/g, '')
                     )
-                    console.log(newPriceInUS)
+
                     result.newPriceInUS = Number(newPriceInUS.replace('$ ', '').replace(/,/g, ''))
                     // Call eachItemInfoAtUsa(n, driver02)
 
@@ -578,7 +575,6 @@ async function getAmazonInfo() {
                         await ref.doc(result.asin).set(result)
                       }
                     }
-                    console.log('num=>', itemsData.getDocs().length)
                   }
                   await driverInKeepa.get('https://keepa.com/#')
                 }
