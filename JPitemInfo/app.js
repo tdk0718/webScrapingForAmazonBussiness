@@ -11,6 +11,7 @@ import { exit } from 'process'
 // import { itemsData } from './src/db/modules/item'
 // import { getDriver } from './src/helper/seleniumHelper'
 import { getKeepaInfo } from './keepaInfo'
+import { getAmazonUSInfo } from './getAmazonUSInfo'
 
 const app = Firebase.initializeApp({
   apiKey: 'AIzaSyCj9Vxn7bQCy80iwxR8fB3HA9iGgySUrBI',
@@ -258,6 +259,7 @@ async function getAmazonInfo() {
   driver[3] = await new Builder().withCapabilities(capabilities).build()
   const driverInKeepa = await new Builder().withCapabilities(capabilities).build()
   const driverInKeepaInJP = await new Builder().withCapabilities(capabilities).build()
+  const driverForUS = await new Builder().withCapabilities(capabilities).build()
 
   try {
     await driver[1].get(
@@ -570,9 +572,14 @@ async function getAmazonInfo() {
                             Number(result.RankingDrop30) / Number(result.NewItemNum)
                           )
                         }
+                        result.totalPriceFromUS = getAmazonUSInfo(driverForUS, result)
 
-                        console.log(result)
-                        await ref.doc(result.asin).set(result)
+                        result.realDeffPrice =
+                          result.priceInJp - result.dolen * result.totalPriceFromUS
+                        if (result.totalPriceFromUS && result.realDeffPrice > 0) {
+                          console.log(result)
+                          await ref.doc(result.asin).set(result)
+                        }
                       }
                     }
                   }
@@ -611,6 +618,7 @@ async function getAmazonInfo() {
     driver[3].quit()
     driverInKeepaInJP.quit()
     driverInKeepa.quit()
+    driverForUS.quit()
   } catch (err) {
     console.log(err)
     driver[1].quit()
@@ -618,6 +626,8 @@ async function getAmazonInfo() {
     driver[3].quit()
     driverInKeepaInJP.quit()
     driverInKeepa.quit()
+    driverForUS.quit()
+
     getAmazonInfo()
   }
 
