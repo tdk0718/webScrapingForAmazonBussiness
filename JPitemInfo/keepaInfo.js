@@ -3,15 +3,15 @@ const { Builder, By, until } = webdriver
 
 export function getKeepaInfo(driver, infoObject) {
   return new Promise(async (resolve, reject) => {
-    try {
-      if (infoObject.id) {
-        await driver.get('https://keepa.com/#!product/5-' + infoObject.id)
-        try {
-          await driver.wait(until.elementLocated(By.id('statisticss')), 2000)
-        } catch (e) {
-          console.log(e)
-        }
+    if (infoObject.id) {
+      await driver.get('https://keepa.com/#!product/5-' + infoObject.id)
+      try {
+        await driver.wait(until.elementLocated(By.id('statisticss')), 2000)
+      } catch (e) {}
+      try {
         await driver.wait(until.elementLocated(By.id('tabMore')), 100000)
+      } catch (e) {}
+      try {
         await driver.findElement(By.id('tabMore')).click()
 
         await driver.wait(until.elementLocated(By.css('#grid-product-detail')), 100000)
@@ -133,8 +133,13 @@ export function getKeepaInfo(driver, infoObject) {
 
         await driver.get('https://keepa.com/#')
         resolve(result)
+        return
+      } catch (e) {
+        console.log(e)
+        await driver.get('https://keepa.com/#')
+        resolve({})
       }
-    } catch (e) {}
+    }
 
     resolve({})
   })

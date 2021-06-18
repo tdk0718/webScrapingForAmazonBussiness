@@ -46,15 +46,17 @@ var import_selenium_webdriver = __toModule(require("selenium-webdriver"));
 var { Builder, By, until } = import_selenium_webdriver.default;
 function getKeepaInfo(driver, infoObject) {
   return new Promise(async (resolve, reject) => {
-    try {
-      if (infoObject.id) {
-        await driver.get("https://keepa.com/#!product/5-" + infoObject.id);
-        try {
-          await driver.wait(until.elementLocated(By.id("statisticss")), 2e3);
-        } catch (e) {
-          console.log(e);
-        }
+    if (infoObject.id) {
+      await driver.get("https://keepa.com/#!product/5-" + infoObject.id);
+      try {
+        await driver.wait(until.elementLocated(By.id("statisticss")), 2e3);
+      } catch (e) {
+      }
+      try {
         await driver.wait(until.elementLocated(By.id("tabMore")), 1e5);
+      } catch (e) {
+      }
+      try {
         await driver.findElement(By.id("tabMore")).click();
         await driver.wait(until.elementLocated(By.css("#grid-product-detail")), 1e5);
         let tableRow = await driver.findElements(By.css("#grid-product-detail .ag-row"));
@@ -116,8 +118,11 @@ function getKeepaInfo(driver, infoObject) {
         }
         await driver.get("https://keepa.com/#");
         resolve(result);
+        return;
+      } catch (e) {
+        console.log(e);
+        resolve({});
       }
-    } catch (e) {
     }
     resolve({});
   });
@@ -590,7 +595,6 @@ async function getAmazonInfo() {
     driverInKeepaInJP.quit();
     driverInKeepa.quit();
     driverForUS.quit();
-    getAmazonInfo();
   }
   return;
 }
