@@ -121,6 +121,7 @@ function getKeepaInfo(driver, infoObject) {
         return;
       } catch (e) {
         console.log(e);
+        await driver.get("https://keepa.com/#");
         resolve({});
       }
     }
@@ -139,6 +140,7 @@ function getAmazonUSInfo(driver, infoObject) {
       result = await driver.findElement(By2.css("#a-popover-content-5 > table > tbody > tr:nth-child(5) > td.a-span2.a-text-right > span").getText());
       result = result.replace(" $", "").replace(/,/g, "");
     } catch (e) {
+      console.log(e);
     }
     resolve(result);
   });
@@ -599,5 +601,7 @@ async function getAmazonInfo() {
   return;
 }
 (async () => {
-  await getAmazonInfo();
+  while (true) {
+    await getAmazonInfo();
+  }
 })();

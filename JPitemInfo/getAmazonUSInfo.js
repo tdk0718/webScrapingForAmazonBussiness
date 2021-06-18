@@ -12,7 +12,9 @@ export function getAmazonUSInfo(driver, infoObject) {
         ).getText()
       )
       result = result.replace(' $', '').replace(/,/g, '')
-    } catch (e) {}
+    } catch (e) {
+      console.log(e)
+    }
     resolve(result)
   })
 }
