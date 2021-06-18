@@ -481,5 +481,7 @@ async function getAmazonInfo() {
 }
 
 ;(async () => {
-  await getAmazonInfo()
+  while (true) {
+    await getAmazonInfo()
+  }
 })()
