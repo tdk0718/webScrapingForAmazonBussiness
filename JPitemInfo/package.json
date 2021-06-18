@@ -8,5 +8,8 @@
     "dev": "node esbuild.js && node dist/index.js"
   },
   "author": "tdk0718 <t.matsushita0718@gmail.com>",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "core-js": "^3.14.0"
+  }
 }

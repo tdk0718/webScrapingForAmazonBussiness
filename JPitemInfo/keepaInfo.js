@@ -130,13 +130,11 @@ export function getKeepaInfo(driver, infoObject) {
             }
           }
         }
-        console.log(result)
+
         await driver.get('https://keepa.com/#')
         resolve(result)
       }
-    } catch (e) {
-      console.log(e)
-    }
+    } catch (e) {}
 
     resolve({})
   })

@@ -1,6 +1,17 @@
 import webdriver from 'selenium-webdriver'
 const { Builder, By, until } = webdriver
 
+export function createDriver(capabilities) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const driver = await new Builder().withCapabilities(capabilities).build()
+      resolve(driver)
+    } catch (e) {
+      reject(e)
+    }
+  })
+}
+
 export function getTextByCss(driver, css) {
   return new Promise(async (resolve, reject) => {
     try {

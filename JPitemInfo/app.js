@@ -14,7 +14,7 @@ import { getKeepaInfo } from './keepaInfo'
 import { getAmazonUSInfo } from './getAmazonUSInfo'
 import { getUSDoler } from './helper/getUSDoler'
 import { keepaLogin } from './helper/keepaLogin'
-import { getTextByCss, countEls, getAttrByCss, waitEl } from './helper/findElementsByCss'
+import { getTextByCss, countEls, getAttrByCss, waitEl, createDriver } from './helper/seleniumHelper'
 import { keywords, categories } from './type/defaultData'
 
 const app = Firebase.initializeApp({
@@ -170,15 +170,15 @@ async function getAmazonInfo() {
 
   const capabilities = webdriver.Capabilities.chrome()
   capabilities.set('chromeOptions', {
-    args: ['--headless', '--no-sandbox', '--disable-gpu', `--window-size=1980,1200`],
+    args: ['--headless', '--no-sandbox', '--disable-gpu', `--window-size=1980,400`],
   })
   const driver = []
-  driver[1] = await new Builder().withCapabilities(capabilities).build()
-  driver[2] = await new Builder().withCapabilities(capabilities).build()
-  driver[3] = await new Builder().withCapabilities(capabilities).build()
-  const driverInKeepa = await new Builder().withCapabilities(capabilities).build()
-  const driverInKeepaInJP = await new Builder().withCapabilities(capabilities).build()
-  const driverForUS = await new Builder().withCapabilities(capabilities).build()
+  driver[1] = await createDriver(capabilities)
+  driver[2] = await createDriver(capabilities)
+
+  const driverInKeepa = await createDriver(capabilities)
+  const driverInKeepaInJP = await createDriver(capabilities)
+  const driverForUS = await createDriver(capabilities)
 
   try {
     if (!logsData.getDocs().length) {
@@ -265,25 +265,19 @@ async function getAmazonInfo() {
 
           const putKeyword = keywords[j]
           const node = categories[t].code
-          const n = ((pageNum + 2) % 3) + 1
+          const n = ((pageNum + 1) % 2) + 1
 
           if (pageNum === 1) {
-            driver[1].get(
-              'https://www.amazon.co.jp/s?k=' + putKeyword + '&page=' + pageNum + '&node=' + node
-            )
             driver[2].get(
               'https://www.amazon.co.jp/s?k=' + putKeyword + '&page=' + pageNum + '&node=' + node
             )
           }
           if (pageNum !== 1 && isFirstLoad) {
-            driver[((pageNum + 2) % 3) + 1].get(
-              'https://www.amazon.co.jp/s?k=' + putKeyword + '&page=' + pageNum + '&node=' + node
-            )
-            driver[((pageNum + 3) % 3) + 1].get(
+            driver[(pageNum % 2) + 1].get(
               'https://www.amazon.co.jp/s?k=' + putKeyword + '&page=' + pageNum + '&node=' + node
             )
           }
-          driver[((pageNum + 1) % 3) + 1].get(
+          driver[((pageNum + 1) % 2) + 1].get(
             'https://www.amazon.co.jp/s?k=' +
               putKeyword +
               '&page=' +
@@ -470,7 +464,7 @@ async function getAmazonInfo() {
     console.log('fin')
     driver[1].quit()
     driver[2].quit()
-    driver[3].quit()
+
     driverInKeepaInJP.quit()
     driverInKeepa.quit()
     driverForUS.quit()
@@ -478,12 +472,10 @@ async function getAmazonInfo() {
     console.log(err)
     driver[1].quit()
     driver[2].quit()
-    driver[3].quit()
+
     driverInKeepaInJP.quit()
     driverInKeepa.quit()
     driverForUS.quit()
-
-    getAmazonInfo()
   }
   return
 }

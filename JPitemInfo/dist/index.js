@@ -114,12 +114,10 @@ function getKeepaInfo(driver, infoObject) {
             }
           }
         }
-        console.log(result);
         await driver.get("https://keepa.com/#");
         resolve(result);
       }
     } catch (e) {
-      console.log(e);
     }
     resolve({});
   });
@@ -175,9 +173,19 @@ function keepaLogin(driver) {
   });
 }
 
-// helper/findElementsByCss.js
+// helper/seleniumHelper.js
 var import_selenium_webdriver5 = __toModule(require("selenium-webdriver"));
 var { Builder: Builder5, By: By5, until: until5 } = import_selenium_webdriver5.default;
+function createDriver(capabilities) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const driver = await new Builder5().withCapabilities(capabilities).build();
+      resolve(driver);
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
 function getTextByCss(driver, css) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -309,7 +317,6 @@ var keywords = [
 // app.js
 var import_fast_sort = __toModule(require("fast-sort"));
 var fs = require("fs");
-var { Builder: Builder6, By: By6, until: until6 } = import_selenium_webdriver6.default;
 var app = import_app.default.initializeApp({
   apiKey: "AIzaSyCj9Vxn7bQCy80iwxR8fB3HA9iGgySUrBI",
   authDomain: "webscrapingforbussiness.firebaseapp.com",
@@ -402,15 +409,14 @@ async function getAmazonInfo() {
   console.log("start");
   const capabilities = import_selenium_webdriver6.default.Capabilities.chrome();
   capabilities.set("chromeOptions", {
-    args: ["--headless", "--no-sandbox", "--disable-gpu", `--window-size=1980,1200`]
+    args: ["--headless", "--no-sandbox", "--disable-gpu", `--window-size=1980,400`]
   });
   const driver = [];
-  driver[1] = await new Builder6().withCapabilities(capabilities).build();
-  driver[2] = await new Builder6().withCapabilities(capabilities).build();
-  driver[3] = await new Builder6().withCapabilities(capabilities).build();
-  const driverInKeepa = await new Builder6().withCapabilities(capabilities).build();
-  const driverInKeepaInJP = await new Builder6().withCapabilities(capabilities).build();
-  const driverForUS = await new Builder6().withCapabilities(capabilities).build();
+  driver[1] = await createDriver(capabilities);
+  driver[2] = await createDriver(capabilities);
+  const driverInKeepa = await createDriver(capabilities);
+  const driverInKeepaInJP = await createDriver(capabilities);
+  const driverForUS = await createDriver(capabilities);
   try {
     if (!logsData.getDocs().length) {
       await logsData.stream();
@@ -458,16 +464,14 @@ async function getAmazonInfo() {
           }
           const putKeyword = keywords[j];
           const node = categories[t].code;
-          const n = (pageNum + 2) % 3 + 1;
+          const n = (pageNum + 1) % 2 + 1;
           if (pageNum === 1) {
-            driver[1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
             driver[2].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
           }
           if (pageNum !== 1 && isFirstLoad) {
-            driver[(pageNum + 2) % 3 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
-            driver[(pageNum + 3) % 3 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
+            driver[pageNum % 2 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
           }
-          driver[(pageNum + 1) % 3 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + (pageNum + 1) + "&node=" + node);
+          driver[(pageNum + 1) % 2 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + (pageNum + 1) + "&node=" + node);
           await waitEl(driver[n], "#search", 5e4);
           const numPerPage = await countEls(driver[n], ".s-result-item.s-asin");
           const pageOverFlowExist = await countEls(driver[n], ".sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)");
@@ -576,7 +580,6 @@ async function getAmazonInfo() {
     console.log("fin");
     driver[1].quit();
     driver[2].quit();
-    driver[3].quit();
     driverInKeepaInJP.quit();
     driverInKeepa.quit();
     driverForUS.quit();
@@ -584,7 +587,6 @@ async function getAmazonInfo() {
     console.log(err);
     driver[1].quit();
     driver[2].quit();
-    driver[3].quit();
     driverInKeepaInJP.quit();
     driverInKeepa.quit();
     driverForUS.quit();

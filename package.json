@@ -14,7 +14,6 @@
     "@magnetarjs/core": "^0.1.0",
     "@magnetarjs/utils": "^0.1.0",
     "@quasar/extras": "^1.0.0",
-    "core-js": "^3.6.5",
     "esbuild": "^0.12.5",
     "express": "^4.17.1",
     "fast-sort": "^3.0.2",
@@ -27,6 +26,7 @@
   "devDependencies": {
     "@quasar/app": "^2.0.0",
     "babel-eslint": "^10.0.1",
+    "core-js": "^3.14.0",
     "eslint": "^7.27.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-config-standard": "^16.0.2",
