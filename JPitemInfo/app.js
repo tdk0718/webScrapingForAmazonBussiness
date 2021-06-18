@@ -485,7 +485,6 @@ async function getAmazonInfo() {
 
     getAmazonInfo()
   }
-
   return
 }
 
