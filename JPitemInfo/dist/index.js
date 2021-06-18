@@ -33,7 +33,7 @@ var __toModule = (module2) => {
 
 // app.js
 var import_util = __toModule(require("util"));
-var import_selenium_webdriver2 = __toModule(require("selenium-webdriver"));
+var import_selenium_webdriver6 = __toModule(require("selenium-webdriver"));
 var import_app = __toModule(require("firebase/app"));
 var import_firestore = __toModule(require("firebase/firestore"));
 var import_storage = __toModule(require("firebase/storage"));
@@ -44,7 +44,7 @@ var import_process = __toModule(require("process"));
 // keepaInfo.js
 var import_selenium_webdriver = __toModule(require("selenium-webdriver"));
 var { Builder, By, until } = import_selenium_webdriver.default;
-async function getKeepaInfo(driver, infoObject) {
+function getKeepaInfo(driver, infoObject) {
   return new Promise(async (resolve, reject) => {
     try {
       if (infoObject.id) {
@@ -115,6 +115,7 @@ async function getKeepaInfo(driver, infoObject) {
           }
         }
         console.log(result);
+        await driver.get("https://keepa.com/#");
         resolve(result);
       }
     } catch (e) {
@@ -124,89 +125,101 @@ async function getKeepaInfo(driver, infoObject) {
   });
 }
 
-// app.js
-var import_fast_sort = __toModule(require("fast-sort"));
-var fs = require("fs");
+// getAmazonUSInfo.js
+var import_selenium_webdriver2 = __toModule(require("selenium-webdriver"));
 var { Builder: Builder2, By: By2, until: until2 } = import_selenium_webdriver2.default;
-var app = import_app.default.initializeApp({
-  apiKey: "AIzaSyCj9Vxn7bQCy80iwxR8fB3HA9iGgySUrBI",
-  authDomain: "webscrapingforbussiness.firebaseapp.com",
-  projectId: "webscrapingforbussiness",
-  storageBucket: "webscrapingforbussiness.appspot.com",
-  messagingSenderId: "843243345021",
-  appId: "1:843243345021:web:908bb33aaaeec9c59dcd14"
-});
-var db = import_app.default.firestore(app);
-var current = new Date();
-var currentDate = current.getFullYear() + "-" + (current.getMonth() + 1);
-function createNewAccessId() {
-  const LENGTH = 20;
-  const SOURCE = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUWXYZ0123456789";
-  let NewId = "";
-  for (let i = 0; i < LENGTH; i++) {
-    NewId += SOURCE[Math.floor(Math.random() * SOURCE.length)];
-  }
-  return NewId;
+function getAmazonUSInfo(driver, infoObject) {
+  return new Promise(async (resolve, reject) => {
+    let result = "";
+    await driver.get(infoObject.linkInUS);
+    try {
+      result = await driver.findElement(By2.css("#a-popover-content-5 > table > tbody > tr:nth-child(5) > td.a-span2.a-text-right > span").getText());
+      result = result.replace(" $", "").replace(/,/g, "");
+    } catch (e) {
+    }
+    resolve(result);
+  });
 }
-var itemsData = {
-  itemDB: [],
-  async stream({ node }) {
-    console.log(node);
-    await db.collection("Items").doc(currentDate).set({ created_at: current });
-    await db.collection(`Items/${currentDate}/Items`).where("categoryNode", "==", node).onSnapshot((res) => {
-      this.itemDB = res;
-    });
-  },
-  getDocs() {
-    const result = [];
-    this.itemDB.forEach((el) => {
-      result.push(el.data());
-    });
-    return result;
-  },
-  getDocById(id) {
-    const docs = this.getDocs();
-    return docs.find((el) => el.asin === id);
-  },
-  isHaveId(id) {
-    const docs = this.getDocs();
-    if (docs.find((el) => el.asin === id))
-      return true;
-    return false;
-  }
-};
-var logsData = {
-  logDB: [],
-  async stream() {
-    await db.collection("Logs").doc(currentDate).set({ created_at: current });
-    await db.collection(`Logs/${currentDate}/Logs`).onSnapshot((res) => {
-      this.logDB = res;
-    });
-  },
-  async getDocs() {
-    const result = [];
-    this.logDB.forEach((el) => {
-      result.push(el.data());
-    });
-    return result;
-  },
-  getLatestDoc() {
-    let result = [];
-    this.logDB.forEach((el) => {
-      result.push(el.data());
-    });
-    if (!result.length)
-      return [];
-    const maxSearchIndex = (0, import_fast_sort.sort)(result).desc((r) => r.searchTextIndex)[0].searchTextIndex;
-    const maxNodeIndex = (0, import_fast_sort.sort)(result.filter((e) => e.searchTextIndex === maxSearchIndex)).desc((r) => r.nodeIndex)[0].nodeIndex;
-    const maxPageNum = (0, import_fast_sort.sort)(result.filter((e) => e.searchTextIndex === maxSearchIndex && e.nodeIndex === maxNodeIndex)).desc((r) => r.pageNum)[0].pageNum;
-    return {
-      nodeIndex: maxNodeIndex,
-      pageNum: maxPageNum,
-      searchTextIndex: maxSearchIndex
-    };
-  }
-};
+
+// helper/getUSDoler.js
+var import_selenium_webdriver3 = __toModule(require("selenium-webdriver"));
+var { Builder: Builder3, By: By3, until: until3 } = import_selenium_webdriver3.default;
+function getUSDoler(driver) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      await driver.get("https://www.google.co.jp/search?q=%E3%83%89%E3%83%AB%E3%80%80%E6%97%A5%E6%9C%AC%E3%80%80&newwindow=1&sxsrf=ALeKk02FiS2ljVzmM6I_ssSrneI7HG49fQ%3A1622019947152&ei=aw-uYN7pCOuGr7wPsKqeGA&oq=%E3%83%89%E3%83%AB%E3%80%80%E6%97%A5%E6%9C%AC%E3%80%80&gs_lcp=Cgdnd3Mtd2l6EAMyBQgAEMQCMgYIABAHEB4yBggAEAcQHjIGCAAQBxAeMgYIABAHEB4yBggAEAcQHjIGCAAQBxAeMgYIABAHEB46CQgAELADEAQQJToJCAAQsAMQBxAeOgQIIxAnOggIABCxAxCDAToFCAAQsQNQ1hhY4SRgkShoAXAAeACAAcQBiAG5BZIBAzAuNJgBAKABAaABAqoBB2d3cy13aXrIAQjAAQE&sclient=gws-wiz&ved=0ahUKEwiey5KW_-bwAhVrw4sBHTCVBwMQ4dUDCA4&uact=5");
+      const dolen = await driver.findElement(By3.css("#knowledge-currency__updatable-data-column > div:nth-child(1) > div:nth-child(2) > span:nth-child(1)")).getText();
+      resolve(Number(dolen));
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+// helper/keepaLogin.js
+var import_selenium_webdriver4 = __toModule(require("selenium-webdriver"));
+var { Builder: Builder4, By: By4, until: until4 } = import_selenium_webdriver4.default;
+function keepaLogin(driver) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      await driver.get("https://keepa.com/#");
+      await driver.wait(until4.elementLocated(By4.id("panelUserRegisterLogin")), 1e4);
+      await driver.findElement(By4.id("panelUserRegisterLogin")).click();
+      await driver.findElement(By4.id("username")).sendKeys("t.matsushita0718@gmail.com");
+      await driver.findElement(By4.id("password")).sendKeys("tadaki4281");
+      await driver.findElement(By4.id("submitLogin")).click();
+      resolve("ok");
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+// helper/findElementsByCss.js
+var import_selenium_webdriver5 = __toModule(require("selenium-webdriver"));
+var { Builder: Builder5, By: By5, until: until5 } = import_selenium_webdriver5.default;
+function getTextByCss(driver, css) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const result = await driver.findElement(By5.css(css)).getText();
+      resolve(result);
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+function waitEl(driver, css, seconds) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      await driver.wait(until5.elementLocated(By5.css(css)), seconds);
+      resolve("ok");
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+function getAttrByCss(driver, css, attr) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const result = await driver.findElement(By5.css(css)).getAttribute(attr);
+      resolve(result);
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+function countEls(driver, css) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const el = await driver.findElements(By5.css(css));
+      resolve(el.length);
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+// type/defaultData.js
 var categories = [
   { code: 13384021, keyword: "\u96D1\u8A8C" },
   { code: 561958, keyword: "DVD" },
@@ -282,45 +295,132 @@ var categories = [
   { code: 3450889051, keyword: "\u636E\u4ED8\u3051\u30DA\u30FC\u30D1\u30FC\u30BF\u30AA\u30EB\u30DB\u30EB\u30C0\u30FC" },
   { code: 3450891051, keyword: "\u30C8\u30A4\u30EC\u30D6\u30FC\u30B9\u90E8\u54C1" }
 ];
-var keywords = ["\u4E26\u884C\u8F38\u5165", "\u8F38\u5165", "import", "\u30A4\u30F3\u30DD\u30FC\u30C8", "\u6D77\u5916", "\u5317\u7C73", "\u56FD\u540D", "\u65E5\u672C\u672A\u767A\u58F2"];
+var keywords = [
+  "\u4E26\u884C\u8F38\u5165",
+  "\u8F38\u5165",
+  "import",
+  "\u30A4\u30F3\u30DD\u30FC\u30C8",
+  "\u6D77\u5916",
+  "\u5317\u7C73",
+  "\u56FD\u540D",
+  "\u65E5\u672C\u672A\u767A\u58F2"
+];
+
+// app.js
+var import_fast_sort = __toModule(require("fast-sort"));
+var fs = require("fs");
+var { Builder: Builder6, By: By6, until: until6 } = import_selenium_webdriver6.default;
+var app = import_app.default.initializeApp({
+  apiKey: "AIzaSyCj9Vxn7bQCy80iwxR8fB3HA9iGgySUrBI",
+  authDomain: "webscrapingforbussiness.firebaseapp.com",
+  projectId: "webscrapingforbussiness",
+  storageBucket: "webscrapingforbussiness.appspot.com",
+  messagingSenderId: "843243345021",
+  appId: "1:843243345021:web:908bb33aaaeec9c59dcd14"
+});
+var db = import_app.default.firestore(app);
+var current = new Date();
+var currentDate = current.getFullYear() + "-" + (current.getMonth() + 1);
+function createNewAccessId() {
+  const LENGTH = 20;
+  const SOURCE = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUWXYZ0123456789";
+  let NewId = "";
+  for (let i = 0; i < LENGTH; i++) {
+    NewId += SOURCE[Math.floor(Math.random() * SOURCE.length)];
+  }
+  return NewId;
+}
+var itemsData = {
+  itemDB: [],
+  async stream({ node }) {
+    try {
+      console.log(node);
+      await db.collection("Items").doc(currentDate).set({ created_at: current });
+      await db.collection(`Items/${currentDate}/Items`).where("categoryNode", "==", node).onSnapshot((res) => {
+        this.itemDB = res;
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  },
+  getDocs() {
+    const result = [];
+    this.itemDB.forEach((el) => {
+      result.push(el.data());
+    });
+    return result;
+  },
+  getDocById(id) {
+    const docs = this.getDocs();
+    return docs.find((el) => el.asin === id);
+  },
+  isHaveId(id) {
+    const docs = this.getDocs();
+    if (docs.find((el) => el.asin === id))
+      return true;
+    return false;
+  }
+};
+var logsData = {
+  logDB: [],
+  async stream() {
+    await db.collection("Logs").doc(currentDate).set({ created_at: current });
+    await db.collection(`Logs/${currentDate}/Logs`).onSnapshot((res) => {
+      this.logDB = res;
+    });
+  },
+  async getDocs() {
+    const result = [];
+    this.logDB.forEach((el) => {
+      result.push(el.data());
+    });
+    return result;
+  },
+  getLatestDoc() {
+    let result = [];
+    this.logDB.forEach((el) => {
+      result.push(el.data());
+    });
+    if (!result.length)
+      return [];
+    const maxSearchIndex = (0, import_fast_sort.sort)(result).desc((r) => r.searchTextIndex)[0].searchTextIndex;
+    const maxNodeIndex = (0, import_fast_sort.sort)(result.filter((e) => e.searchTextIndex === maxSearchIndex)).desc((r) => r.nodeIndex)[0].nodeIndex;
+    const maxPageNum = (0, import_fast_sort.sort)(result.filter((e) => e.searchTextIndex === maxSearchIndex && e.nodeIndex === maxNodeIndex)).desc((r) => r.pageNum)[0].pageNum;
+    return {
+      nodeIndex: maxNodeIndex,
+      pageNum: maxPageNum,
+      searchTextIndex: maxSearchIndex
+    };
+  }
+};
 async function getAmazonInfo() {
   var _a, _b, _c;
+  const accessId = createNewAccessId();
+  let isFirstLoad = true;
+  let isExistTodayLog = false;
+  let isFinishGetForThisNode = false;
+  console.log("start");
+  const capabilities = import_selenium_webdriver6.default.Capabilities.chrome();
+  capabilities.set("chromeOptions", {
+    args: ["--headless", "--no-sandbox", "--disable-gpu", `--window-size=1980,1200`]
+  });
+  const driver = [];
+  driver[1] = await new Builder6().withCapabilities(capabilities).build();
+  driver[2] = await new Builder6().withCapabilities(capabilities).build();
+  driver[3] = await new Builder6().withCapabilities(capabilities).build();
+  const driverInKeepa = await new Builder6().withCapabilities(capabilities).build();
+  const driverInKeepaInJP = await new Builder6().withCapabilities(capabilities).build();
+  const driverForUS = await new Builder6().withCapabilities(capabilities).build();
   try {
-    const accessId = createNewAccessId();
-    let isFirstLoad = true;
-    let isExistTodayLog = false;
-    let isFinishGetForThisNode = false;
-    console.log("start");
-    await logsData.stream();
+    if (!logsData.getDocs().length) {
+      await logsData.stream();
+    }
     const logRef = await db.collection(`Logs/${currentDate}/Logs`);
-    const capabilities = import_selenium_webdriver2.default.Capabilities.chrome();
-    capabilities.set("chromeOptions", {
-      args: ["--headless", "--no-sandbox", "--disable-gpu", `--window-size=1980,1200`]
-    });
-    const driver = [];
-    driver[1] = await new Builder2().withCapabilities(capabilities).build();
-    driver[2] = await new Builder2().withCapabilities(capabilities).build();
-    driver[3] = await new Builder2().withCapabilities(capabilities).build();
-    await driver[1].get("https://www.google.co.jp/search?q=%E3%83%89%E3%83%AB%E3%80%80%E6%97%A5%E6%9C%AC%E3%80%80&newwindow=1&sxsrf=ALeKk02FiS2ljVzmM6I_ssSrneI7HG49fQ%3A1622019947152&ei=aw-uYN7pCOuGr7wPsKqeGA&oq=%E3%83%89%E3%83%AB%E3%80%80%E6%97%A5%E6%9C%AC%E3%80%80&gs_lcp=Cgdnd3Mtd2l6EAMyBQgAEMQCMgYIABAHEB4yBggAEAcQHjIGCAAQBxAeMgYIABAHEB4yBggAEAcQHjIGCAAQBxAeMgYIABAHEB46CQgAELADEAQQJToJCAAQsAMQBxAeOgQIIxAnOggIABCxAxCDAToFCAAQsQNQ1hhY4SRgkShoAXAAeACAAcQBiAG5BZIBAzAuNJgBAKABAaABAqoBB2d3cy13aXrIAQjAAQE&sclient=gws-wiz&ved=0ahUKEwiey5KW_-bwAhVrw4sBHTCVBwMQ4dUDCA4&uact=5");
-    const dolen = await driver[1].findElement(By2.css("#knowledge-currency__updatable-data-column > div:nth-child(1) > div:nth-child(2) > span:nth-child(1)")).getText();
-    const driverInKeepa = await new Builder2().withCapabilities(capabilities).build();
-    await driverInKeepa.get("https://keepa.com/#");
-    await driverInKeepa.wait(until2.elementLocated(By2.id("panelUserRegisterLogin")), 1e4);
-    await driverInKeepa.findElement(By2.id("panelUserRegisterLogin")).click();
-    await driverInKeepa.findElement(By2.id("username")).sendKeys("t.matsushita0718@gmail.com");
-    await driverInKeepa.findElement(By2.id("password")).sendKeys("tadaki4281");
-    await driverInKeepa.findElement(By2.id("submitLogin")).click();
-    const driverInKeepaInJP = await new Builder2().withCapabilities(capabilities).build();
-    await driverInKeepaInJP.get("https://keepa.com/#");
-    await driverInKeepaInJP.wait(until2.elementLocated(By2.id("panelUserRegisterLogin")), 1e4);
-    await driverInKeepaInJP.findElement(By2.id("panelUserRegisterLogin")).click();
-    await driverInKeepaInJP.findElement(By2.id("username")).sendKeys("t.matsushita0718@gmail.com");
-    await driverInKeepaInJP.findElement(By2.id("password")).sendKeys("tadaki4281");
-    await driverInKeepaInJP.findElement(By2.id("submitLogin")).click();
+    const dolen = await getUSDoler(driver[1]);
+    await keepaLogin(driverInKeepa);
+    await keepaLogin(driverInKeepaInJP);
     const ref = await db.collection(`Items/${currentDate}/Items`);
-    let logsDataObj;
-    logsDataObj = logsData.getLatestDoc();
-    console.log(logsDataObj);
+    let logsDataObj = logsData.getLatestDoc();
     const latestLogDate = ((_a = logsDataObj == null ? void 0 : logsDataObj.created_at) == null ? void 0 : _a.seconds) ? new Date(logsDataObj.created_at.seconds * 1e3) : new Date(0);
     const now = new Date();
     let checkLogData = {};
@@ -334,7 +434,6 @@ async function getAmazonInfo() {
         let pageNum = isFirstLoad && isExistTodayLog ? checkLogData.pageNum : 1;
         while (pageNum < 1e3) {
           const currentLatestLog = logsData.getLatestDoc() || {};
-          console.log(currentLatestLog);
           if (j > currentLatestLog.searchTextIndex) {
             j = currentLatestLog.searchTextIndex;
             t = currentLatestLog.nodeIndex;
@@ -360,7 +459,6 @@ async function getAmazonInfo() {
           const putKeyword = keywords[j];
           const node = categories[t].code;
           const n = (pageNum + 2) % 3 + 1;
-          console.log(n);
           if (pageNum === 1) {
             driver[1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
             driver[2].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
@@ -370,18 +468,17 @@ async function getAmazonInfo() {
             driver[(pageNum + 3) % 3 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
           }
           driver[(pageNum + 1) % 3 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + (pageNum + 1) + "&node=" + node);
-          await driver[n].wait(until2.elementLocated(By2.id("search")), 5e4);
-          const numPerPage = await driver[n].findElements(By2.css(".s-result-item.s-asin"));
-          const pageOverFlowExist = await driver[n].findElements(By2.css(".sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)"));
+          await waitEl(driver[n], "#search", 5e4);
+          const numPerPage = await countEls(driver[n], ".s-result-item.s-asin");
+          const pageOverFlowExist = await countEls(driver[n], ".sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)");
           let pageOverFlow = "";
-          if (pageOverFlowExist.length) {
-            pageOverFlow = await driver[n].findElement(By2.css(".sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)")).getText();
+          if (pageOverFlowExist) {
+            pageOverFlow = await getTextByCss(driver[n], ".sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)");
           }
           const pageOverFlowArray = (_b = pageOverFlow == null ? void 0 : pageOverFlow.replace(" \u4EE5\u4E0A", "")) == null ? void 0 : _b.split(" ");
           console.log(pageOverFlowArray);
           if (pageOverFlowArray[3]) {
             const currentNum = Number(pageOverFlowArray[3].split("-")[0].replace(",", ""));
-            console.log(pageOverFlowArray[3].split("-")[1]);
             const limitNum = Number(pageOverFlowArray[3].split("-")[1].replace("\u4EF6", "").replace(",", ""));
             if (currentNum > limitNum) {
               isFinishGetForThisNode = true;
@@ -392,42 +489,36 @@ async function getAmazonInfo() {
             isFinishGetForThisNode = true;
             break;
           }
-          for (let i = 1; i <= numPerPage.length; i++) {
+          for (let i = 1; i <= numPerPage; i++) {
             const currentLatestLog2 = logsData.getLatestDoc() || {};
             let result = {};
-            const el = await driver[n].findElements(By2.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base"));
+            const elSize = await countEls(driver[n], ".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base");
             console.log(i);
             const today = new Date();
-            if (el.length) {
-              const asin = await driver[n].findElement(By2.css(".s-result-item.s-asin:nth-child(" + i + ")")).getAttribute("data-asin");
-              const priceExist = await driver[n].findElements(By2.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole"));
-              if (priceExist.length) {
-                let priceInJp = await driver[n].findElement(By2.css(".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole")).getText();
+            if (elSize) {
+              const asin = await getAttrByCss(driver[n], ".s-result-item.s-asin:nth-child(" + i + ")", "data-asin");
+              const priceExistSize = await countEls(driver[n], ".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole");
+              if (priceExistSize) {
+                let priceInJp = await getTextByCss(driver[n], ".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole");
                 priceInJp = priceInJp.replace(/,/g, "").replace("\uFFE5", "");
                 if (Number(priceInJp) > 3500 && !((_c = itemsData.getDocById(asin)) == null ? void 0 : _c.id)) {
                   await driverInKeepa.get("https://keepa.com/#!product/1-" + asin);
                   try {
-                    await driverInKeepa.wait(until2.elementLocated(By2.css("span.priceNewsss")), 1e3);
+                    await waitEl(driverInKeepa, "span.priceNewsss", 1e3);
                   } catch (e) {
                   }
                   try {
-                    await driverInKeepa.wait(until2.elementLocated(By2.css("span.priceNew")), 1e3);
+                    await waitEl(driverInKeepa, "span.priceNew", 1e3);
                   } catch (e) {
-                    console.log(e);
                   }
-                  const amazonPriceInUSNumber = await driverInKeepa.findElements(By2.css("span.priceAmazon"));
-                  const newPriceInUSNumber = await driverInKeepa.findElements(By2.css("span.priceNew"));
-                  if (amazonPriceInUSNumber.length || newPriceInUSNumber.length) {
-                    const amazonPriceInUS = amazonPriceInUSNumber.length ? await driverInKeepa.findElement(By2.css("span.priceAmazon")).getText() : await driverInKeepa.findElement(By2.css("span.priceNew")).getText();
-                    const newPriceInUS = newPriceInUSNumber.length ? await driverInKeepa.findElement(By2.css("span.priceNew")).getText() : amazonPriceInUS;
-                    const USTitle = await driverInKeepa.findElement(By2.css("#productInfoBox > .productTableDescriptionTitle")).getText() || "";
+                  const amazonPriceInUSNumber = await countEls(driverInKeepa, "span.priceAmazon");
+                  const newPriceInUSNumber = await countEls(driverInKeepa, "span.priceNew");
+                  if (amazonPriceInUSNumber || newPriceInUSNumber) {
+                    const amazonPriceInUS = amazonPriceInUSNumber ? await getTextByCss(driverInKeepa, "span.priceAmazon") : await getTextByCss(driverInKeepa, "span.priceNew");
+                    const newPriceInUS = newPriceInUSNumber ? await getTextByCss(driverInKeepa, "span.priceNew") : amazonPriceInUS;
+                    const USTitle = await getTextByCss(driverInKeepa, "#productInfoBox > .productTableDescriptionTitle") || "";
                     result.priceInJp = Number(priceInJp);
-                    const title = driver[n].findElement(By2.css(".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a"));
-                    const stars = await driver[n].findElements(By2.css(".s-result-item.s-asin:nth-child(" + i + ") i.a-icon-star-small span.a-icon-alt"));
-                    const star = stars.length ? await driver[n].findElement(By2.css(".s-result-item.s-asin:nth-child(" + i + ") i.a-icon-star-small span.a-icon-alt")).getText() : "";
-                    const text = await title.getText();
-                    result.title = text;
-                    result.star = Number(star.replace("5\u3064\u661F\u306E\u3046\u3061", ""));
+                    result.title = await getTextByCss(driver[n], ".s-result-item.s-asin:nth-child(" + i + ") h2.a-color-base > a");
                     result.link = "https://amazon.co.jp/dp/" + asin;
                     result.asin = asin;
                     result.id = asin;
@@ -435,7 +526,6 @@ async function getAmazonInfo() {
                     result.keyword = putKeyword;
                     result.categoryNode = node;
                     result.amazonPriceInUS = Number(amazonPriceInUS.replace("$ ", "").replace(/,/g, ""));
-                    console.log(newPriceInUS);
                     result.newPriceInUS = Number(newPriceInUS.replace("$ ", "").replace(/,/g, ""));
                     result.created_at = today;
                     result.USTitle = USTitle;
@@ -450,11 +540,20 @@ async function getAmazonInfo() {
                     if (result.deffPrice > 3e3 && USTitle) {
                       const keepaInJP = await getKeepaInfo(driverInKeepaInJP, result);
                       result = __spreadValues(__spreadValues({}, result), keepaInJP);
-                      await ref.doc(result.asin).set(result);
-                      console.log(result);
+                      if (result.RankingDrop30) {
+                        if (result.NewItemNum) {
+                          result.itemNumPerSaler30 = Number(result.RankingDrop30) / Number(result.NewItemNum);
+                        }
+                        result.totalPriceFromUS = await getAmazonUSInfo(driverForUS, result);
+                        result.realDeffPrice = result.priceInJp - result.dolen * result.totalPriceFromUS;
+                        if (result.totalPriceFromUS && result.realDeffPrice > 0) {
+                          console.log(result);
+                          await ref.doc(result.asin).set(result);
+                        }
+                      }
                     }
-                    console.log("num=>", itemsData.getDocs().length);
                   }
+                  await driverInKeepa.get("https://keepa.com/#");
                 }
               }
               isFirstLoad = false;
@@ -478,8 +577,17 @@ async function getAmazonInfo() {
     driver[1].quit();
     driver[2].quit();
     driver[3].quit();
+    driverInKeepaInJP.quit();
+    driverInKeepa.quit();
+    driverForUS.quit();
   } catch (err) {
     console.log(err);
+    driver[1].quit();
+    driver[2].quit();
+    driver[3].quit();
+    driverInKeepaInJP.quit();
+    driverInKeepa.quit();
+    driverForUS.quit();
     getAmazonInfo();
   }
   return;

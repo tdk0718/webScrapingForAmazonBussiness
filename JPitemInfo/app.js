@@ -12,6 +12,10 @@ import { exit } from 'process'
 // import { getDriver } from './src/helper/seleniumHelper'
 import { getKeepaInfo } from './keepaInfo'
 import { getAmazonUSInfo } from './getAmazonUSInfo'
+import { getUSDoler } from './helper/getUSDoler'
+import { keepaLogin } from './helper/keepaLogin'
+import { getTextByCss, countEls, getAttrByCss, waitEl } from './helper/findElementsByCss'
+import { keywords, categories } from './type/defaultData'
 
 const app = Firebase.initializeApp({
   apiKey: 'AIzaSyCj9Vxn7bQCy80iwxR8fB3HA9iGgySUrBI',
@@ -138,82 +142,6 @@ const logsData = {
   },
 }
 
-const categories = [
-  { code: 13384021, keyword: '雑誌' },
-  { code: 561958, keyword: 'DVD' },
-  { code: 403507011, keyword: 'ブルーレイ' },
-  { code: 561956, keyword: 'ミュージック' },
-  { code: 2123629051, keyword: '楽器・音響機器' },
-  { code: 637394, keyword: 'ゲーム' },
-  { code: 689132, keyword: 'PCゲーム' },
-  { code: 3895771, keyword: 'キッチン家電' },
-  { code: 3895791, keyword: '生活家電' },
-  { code: 3895751, keyword: '理美容・健康家電' },
-  { code: 3895761, keyword: '空調・季節家電' },
-  { code: 2133982051, keyword: '照明' },
-  { code: 124048011, keyword: '家電' },
-  { code: 16462091, keyword: 'カメラ' },
-  { code: 3465736051, keyword: '業務用カメラ・ビデオ' },
-  { code: 171350011, keyword: '双眼鏡・望遠鏡・光学機器' },
-  { code: 128187011, keyword: '携帯電話・スマートフォン' },
-  { code: 3477381, keyword: 'テレビ・レコーダー' },
-  { code: 16462081, keyword: 'オーディオ' },
-  { code: 3477981, keyword: 'イヤホン・ヘッドホン' },
-  { code: 3544106051, keyword: 'ウェアラブルデバイス' },
-  { code: 3371421, keyword: 'アクセサリ・サプライ' },
-  { code: 3210981, keyword: '家電＆カメラ' },
-  { code: 2188762051, keyword: 'パソコン' },
-  { code: 2127209051, keyword: 'パソコン・周辺機器' },
-  { code: 2151826051, keyword: 'PCアクセサリ・サプライ' },
-  { code: 2151901051, keyword: 'PCパーツ' },
-  { code: 2188763051, keyword: 'プリンタ' },
-  { code: 637392, keyword: 'PCソフト' },
-  { code: 2201422051, keyword: 'PCソフト' },
-  { code: 86731051, keyword: '文房具・オフィス用品' },
-  { code: 13938481, keyword: 'キッチン用品・食器' },
-  { code: 3093567051, keyword: 'インテリア・雑貨' },
-  { code: 2538755051, keyword: 'ラグ・カーテン・ファブリック' },
-  { code: 16428011, keyword: '家具' },
-  { code: 13945081, keyword: '収納ストア' },
-  { code: 2378086051, keyword: '寝具' },
-  { code: 3093569051, keyword: '掃除・洗濯・バス・トイレ' },
-  { code: 2038875051, keyword: '防犯・防災用品' },
-  { code: 2127212051, keyword: 'ペット用品' },
-  { code: 2189701051, keyword: '手芸・画材' },
-  { code: 3828871, keyword: 'ホーム＆キッチン' },
-  { code: 2031744051, keyword: '電動工具・エア工具' },
-  { code: 2038157051, keyword: '作業工具' },
-  { code: 2361405051, keyword: 'ガーデニング' },
-  { code: 2039681051, keyword: 'エクステリア' },
-  { code: 2016929051, keyword: 'DIY・工具' },
-  { code: 13299531, keyword: 'おもちゃ' },
-  { code: 466306, keyword: '絵本・児童書' },
-  { code: 2277721051, keyword: 'ホビー' },
-  { code: 2230006051, keyword: 'レディース' },
-  { code: 2230005051, keyword: 'メンズ' },
-  { code: 2230804051, keyword: 'キッズ' },
-  { code: 2221077051, keyword: 'バッグ・スーツケース' },
-  { code: 2188968051, keyword: 'スポーツウェア＆シューズ' },
-  { code: 15337751, keyword: '自転車' },
-  { code: 14315411, keyword: 'アウトドア' },
-  { code: 14315521, keyword: '釣り' },
-  { code: 14315501, keyword: 'フィットネス・トレーニング' },
-  { code: 14315441, keyword: 'ゴルフ' },
-  { code: 14304371, keyword: 'スポーツ＆アウトドア' },
-  { code: 2017304051, keyword: '車＆バイク' },
-  { code: 2319890051, keyword: 'バイク用品ストア' },
-  { code: 3305008051, keyword: '自動車＆バイク車体' },
-  { code: 3333565051, keyword: '工業機器' },
-  { code: 3037451051, keyword: '研究開発用品' },
-  { code: 3450744051, keyword: '衛生・清掃用品' },
-  { code: 3445393051, keyword: '産業・研究開発用品' },
-  { code: 3450874051, keyword: '衛生設備機器' },
-  { code: 3450884051, keyword: '業務用ハンドドライヤー' },
-  { code: 3450886051, keyword: '据付けトイレットペーパーホルダー' },
-  { code: 3450889051, keyword: '据付けペーパータオルホルダー' },
-  { code: 3450891051, keyword: 'トイレブース部品' },
-]
-
 const keywordData = {
   keywordDB: [],
   async stream() {
@@ -232,13 +160,10 @@ const keywordData = {
   },
 }
 
-const keywords = ['並行輸入', '輸入', 'import', 'インポート', '海外', '北米', '国名', '日本未発売']
-
 async function getAmazonInfo() {
   const accessId = createNewAccessId()
   let isFirstLoad = true
   let isExistTodayLog = false
-
   let isFinishGetForThisNode = false
 
   console.log('start')
@@ -256,42 +181,19 @@ async function getAmazonInfo() {
   const driverForUS = await new Builder().withCapabilities(capabilities).build()
 
   try {
-    // await categoriesData.stream()
     if (!logsData.getDocs().length) {
       await logsData.stream()
     }
     const logRef = await db.collection(`Logs/${currentDate}/Logs`)
-    await driver[1].get(
-      'https://www.google.co.jp/search?q=%E3%83%89%E3%83%AB%E3%80%80%E6%97%A5%E6%9C%AC%E3%80%80&newwindow=1&sxsrf=ALeKk02FiS2ljVzmM6I_ssSrneI7HG49fQ%3A1622019947152&ei=aw-uYN7pCOuGr7wPsKqeGA&oq=%E3%83%89%E3%83%AB%E3%80%80%E6%97%A5%E6%9C%AC%E3%80%80&gs_lcp=Cgdnd3Mtd2l6EAMyBQgAEMQCMgYIABAHEB4yBggAEAcQHjIGCAAQBxAeMgYIABAHEB4yBggAEAcQHjIGCAAQBxAeMgYIABAHEB46CQgAELADEAQQJToJCAAQsAMQBxAeOgQIIxAnOggIABCxAxCDAToFCAAQsQNQ1hhY4SRgkShoAXAAeACAAcQBiAG5BZIBAzAuNJgBAKABAaABAqoBB2d3cy13aXrIAQjAAQE&sclient=gws-wiz&ved=0ahUKEwiey5KW_-bwAhVrw4sBHTCVBwMQ4dUDCA4&uact=5'
-    )
 
-    const dolen = await driver[1]
-      .findElement(
-        By.css(
-          '#knowledge-currency__updatable-data-column > div:nth-child(1) > div:nth-child(2) > span:nth-child(1)'
-        )
-      )
-      .getText()
+    const dolen = await getUSDoler(driver[1])
 
-    await driverInKeepa.get('https://keepa.com/#')
-    await driverInKeepa.wait(until.elementLocated(By.id('panelUserRegisterLogin')), 10000)
-    await driverInKeepa.findElement(By.id('panelUserRegisterLogin')).click()
-    await driverInKeepa.findElement(By.id('username')).sendKeys('t.matsushita0718@gmail.com')
-    await driverInKeepa.findElement(By.id('password')).sendKeys('tadaki4281')
-    await driverInKeepa.findElement(By.id('submitLogin')).click()
-
-    await driverInKeepaInJP.get('https://keepa.com/#')
-    await driverInKeepaInJP.wait(until.elementLocated(By.id('panelUserRegisterLogin')), 10000)
-    await driverInKeepaInJP.findElement(By.id('panelUserRegisterLogin')).click()
-    await driverInKeepaInJP.findElement(By.id('username')).sendKeys('t.matsushita0718@gmail.com')
-    await driverInKeepaInJP.findElement(By.id('password')).sendKeys('tadaki4281')
-    await driverInKeepaInJP.findElement(By.id('submitLogin')).click()
+    await keepaLogin(driverInKeepa)
+    await keepaLogin(driverInKeepaInJP)
 
     const ref = await db.collection(`Items/${currentDate}/Items`)
 
-    let logsDataObj
-
-    logsDataObj = logsData.getLatestDoc()
+    let logsDataObj = logsData.getLatestDoc()
 
     const latestLogDate = logsDataObj?.created_at?.seconds
       ? new Date(logsDataObj.created_at.seconds * 1000)
@@ -327,10 +229,7 @@ async function getAmazonInfo() {
         t++
       ) {
         await itemsData.stream({ node: categories[t].code })
-        // pageNum,
-        //             itemNumAtPage: i,
-        //             categoryNode: node,
-        //             searchText: putKeyword,
+
         let pageNum = isFirstLoad && isExistTodayLog ? checkLogData.pageNum : 1
         while (pageNum < 1000) {
           const currentLatestLog = logsData.getLatestDoc() || {}
@@ -343,11 +242,7 @@ async function getAmazonInfo() {
               pageNum = currentLatestLog.pageNum + 1
             }
           }
-          // if (isFinishGetForThisNode) {
-          //   t += 1
-          //   pageNum = 1
-          //   isFinishGetForThisNode = false
-          // }
+
           if (j === currentLatestLog.searchTextIndex && currentLatestLog.nodeIndex > t) {
             t = currentLatestLog.nodeIndex
 
@@ -397,34 +292,28 @@ async function getAmazonInfo() {
               node
           )
 
-          await driver[n].wait(until.elementLocated(By.id('search')), 50000)
+          await waitEl(driver[n], '#search', 50000)
 
-          const numPerPage = await driver[n].findElements(By.css('.s-result-item.s-asin'))
+          const numPerPage = await countEls(driver[n], '.s-result-item.s-asin')
 
-          const pageOverFlowExist = await driver[n].findElements(
-            By.css(
-              '.sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)'
-            )
+          const pageOverFlowExist = await countEls(
+            driver[n],
+            '.sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)'
           )
 
           let pageOverFlow = ''
-          if (pageOverFlowExist.length) {
-            pageOverFlow = await driver[n]
-              .findElement(
-                By.css(
-                  '.sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)'
-                )
-              )
-              .getText()
+          if (pageOverFlowExist) {
+            pageOverFlow = await getTextByCss(
+              driver[n],
+              '.sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)'
+            )
           }
           const pageOverFlowArray = pageOverFlow?.replace(' 以上', '')?.split(' ')
 
-          // 検索結果 20,000 以上 のうち 49-72件 "並行輸入"
           console.log(pageOverFlowArray)
           if (pageOverFlowArray[3]) {
             const currentNum = Number(pageOverFlowArray[3].split('-')[0].replace(',', ''))
 
-            console.log(pageOverFlowArray[3].split('-')[1])
             const limitNum = Number(
               pageOverFlowArray[3]
                 .split('-')[1]
@@ -442,96 +331,71 @@ async function getAmazonInfo() {
             break
           }
 
-          for (let i = 1; i <= numPerPage.length; i++) {
+          for (let i = 1; i <= numPerPage; i++) {
             const currentLatestLog = logsData.getLatestDoc() || {}
 
             let result = {}
-            // let base64 = await driver[n].takeScreenshot()
-            // let buffer = Buffer.from(base64, 'base64')
 
-            // // bufferを保存
-            // await promisify(fs.writeFile)('screenshot.jpg', buffer)
-
-            const el = await driver[n].findElements(
-              By.css('.s-result-item.s-asin:nth-child(' + i + ') h2.a-color-base')
+            const elSize = await countEls(
+              driver[n],
+              '.s-result-item.s-asin:nth-child(' + i + ') h2.a-color-base'
             )
-
             console.log(i)
-            const today = new Date()
-            if (el.length) {
-              const asin = await driver[n]
-                .findElement(By.css('.s-result-item.s-asin:nth-child(' + i + ')'))
-                .getAttribute('data-asin')
 
-              const priceExist = await driver[n].findElements(
-                By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
+            const today = new Date()
+
+            if (elSize) {
+              const asin = await getAttrByCss(
+                driver[n],
+                '.s-result-item.s-asin:nth-child(' + i + ')',
+                'data-asin'
               )
 
-              if (priceExist.length) {
-                let priceInJp = await driver[n]
-                  .findElement(
-                    By.css('.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole')
-                  )
-                  .getText()
+              const priceExistSize = await countEls(
+                driver[n],
+                '.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole'
+              )
+
+              if (priceExistSize) {
+                let priceInJp = await getTextByCss(
+                  driver[n],
+                  '.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole'
+                )
                 priceInJp = priceInJp.replace(/,/g, '').replace('￥', '')
 
                 if (Number(priceInJp) > 3500 && !itemsData.getDocById(asin)?.id) {
                   await driverInKeepa.get('https://keepa.com/#!product/1-' + asin)
                   try {
-                    await driverInKeepa.wait(until.elementLocated(By.css('span.priceNewsss')), 1000)
+                    await waitEl(driverInKeepa, 'span.priceNewsss', 1000)
                   } catch (e) {}
                   try {
-                    await driverInKeepa.wait(until.elementLocated(By.css('span.priceNew')), 1000)
+                    await waitEl(driverInKeepa, 'span.priceNew', 1000)
                   } catch (e) {}
 
-                  const amazonPriceInUSNumber = await driverInKeepa.findElements(
-                    By.css('span.priceAmazon')
-                  )
+                  const amazonPriceInUSNumber = await countEls(driverInKeepa, 'span.priceAmazon')
 
-                  const newPriceInUSNumber = await driverInKeepa.findElements(
-                    By.css('span.priceNew')
-                  )
+                  const newPriceInUSNumber = await countEls(driverInKeepa, 'span.priceNew')
 
-                  if (amazonPriceInUSNumber.length || newPriceInUSNumber.length) {
-                    const amazonPriceInUS = amazonPriceInUSNumber.length
-                      ? await driverInKeepa.findElement(By.css('span.priceAmazon')).getText()
-                      : await driverInKeepa.findElement(By.css('span.priceNew')).getText()
-                    const newPriceInUS = newPriceInUSNumber.length
-                      ? await driverInKeepa.findElement(By.css('span.priceNew')).getText()
+                  if (amazonPriceInUSNumber || newPriceInUSNumber) {
+                    const amazonPriceInUS = amazonPriceInUSNumber
+                      ? await getTextByCss(driverInKeepa, 'span.priceAmazon')
+                      : await getTextByCss(driverInKeepa, 'span.priceNew')
+                    const newPriceInUS = newPriceInUSNumber
+                      ? await getTextByCss(driverInKeepa, 'span.priceNew')
                       : amazonPriceInUS
 
                     const USTitle =
-                      (await driverInKeepa
-                        .findElement(By.css('#productInfoBox > .productTableDescriptionTitle'))
-                        .getText()) || ''
+                      (await getTextByCss(
+                        driverInKeepa,
+                        '#productInfoBox > .productTableDescriptionTitle'
+                      )) || ''
 
                     result.priceInJp = Number(priceInJp)
-                    const title = driver[n].findElement(
-                      By.css('.s-result-item.s-asin:nth-child(' + i + ') h2.a-color-base > a')
-                    )
 
-                    const stars = await driver[n].findElements(
-                      By.css(
-                        '.s-result-item.s-asin:nth-child(' +
-                          i +
-                          ') i.a-icon-star-small span.a-icon-alt'
-                      )
+                    result.title = await getTextByCss(
+                      driver[n],
+                      '.s-result-item.s-asin:nth-child(' + i + ') h2.a-color-base > a'
                     )
-                    const star = stars.length
-                      ? await driver[n]
-                          .findElement(
-                            By.css(
-                              '.s-result-item.s-asin:nth-child(' +
-                                i +
-                                ') i.a-icon-star-small span.a-icon-alt'
-                            )
-                          )
-                          .getText()
-                      : ''
-
-                    const text = await title.getText()
-                    result.title = text
-                    result.star = Number(star.replace('5つ星のうち', ''))
                     result.link = 'https://amazon.co.jp/dp/' + asin
                     result.asin = asin
                     result.id = asin
@@ -560,16 +424,14 @@ async function getAmazonInfo() {
                     result.category = categories[t].keyword
                     result.accessId = accessId
                     result.ranking = 0
-                    // console.log(result)
 
                     if (result.deffPrice > 3000 && USTitle) {
                       const keepaInJP = await getKeepaInfo(driverInKeepaInJP, result)
                       result = { ...result, ...keepaInJP }
                       if (result.RankingDrop30) {
                         if (result.NewItemNum) {
-                          result.itemNumPerSaler30 = Math.floor(
+                          result.itemNumPerSaler30 =
                             Number(result.RankingDrop30) / Number(result.NewItemNum)
-                          )
                         }
                         result.totalPriceFromUS = await getAmazonUSInfo(driverForUS, result)
 
@@ -592,7 +454,6 @@ async function getAmazonInfo() {
           const logInfo = {
             created_at: new Date(),
             pageNum,
-            // itemNumAtPage: i,
             categoryNode: node,
             nodeIndex: t,
             searchText: putKeyword,
@@ -606,11 +467,6 @@ async function getAmazonInfo() {
       }
     }
 
-    //   const title = await driver[n].findElement(By.id('productTitle')).getText()
-    //   await ref.doc('title').set({ name: title })
-    // } catch (err) {
-    //   console.log(err)
-    // }
     console.log('fin')
     driver[1].quit()
     driver[2].quit()
