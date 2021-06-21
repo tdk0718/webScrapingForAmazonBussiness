@@ -473,12 +473,12 @@ async function getAmazonInfo() {
           const node = categories[t].code;
           const n = (pageNum + 1) % 2 + 1;
           if (pageNum === 1) {
-            driver[2].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
+            driver[2].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node + "&ref=sr_st_price-desc-rank");
           }
           if (pageNum !== 1 && isFirstLoad) {
-            driver[pageNum % 2 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node);
+            driver[pageNum % 2 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + pageNum + "&node=" + node + "&ref=sr_st_price-desc-rank");
           }
-          driver[(pageNum + 1) % 2 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + (pageNum + 1) + "&node=" + node);
+          driver[(pageNum + 1) % 2 + 1].get("https://www.amazon.co.jp/s?k=" + putKeyword + "&page=" + (pageNum + 1) + "&node=" + node + "&ref=sr_st_price-desc-rank");
           await waitEl(driver[n], "#search", 5e4);
           const numPerPage = await countEls(driver[n], ".s-result-item.s-asin");
           const pageOverFlowExist = await countEls(driver[n], ".sg-col.s-breadcrumb.sg-col-10-of-16.sg-col-6-of-12 .a-section.a-spacing-small.a-spacing-top-small span:nth-child(1)");
@@ -512,7 +512,9 @@ async function getAmazonInfo() {
               if (priceExistSize) {
                 let priceInJp = await getTextByCss(driver[n], ".s-result-item.s-asin:nth-child(" + i + ") span.a-price-whole");
                 priceInJp = priceInJp.replace(/,/g, "").replace("\uFFE5", "");
-                if (Number(priceInJp) > 3500 && !((_c = itemsData.getDocById(asin)) == null ? void 0 : _c.id)) {
+                if (Number(priceInJp) < 3500)
+                  break;
+                if (Number(priceInJp) >= 3500 && !((_c = itemsData.getDocById(asin)) == null ? void 0 : _c.id)) {
                   await driverInKeepa.get("https://keepa.com/#!product/1-" + asin);
                   try {
                     await waitEl(driverInKeepa, "span.priceNewsss", 1e3);

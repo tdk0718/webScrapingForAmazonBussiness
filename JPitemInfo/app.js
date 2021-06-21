@@ -269,12 +269,24 @@ async function getAmazonInfo() {
 
           if (pageNum === 1) {
             driver[2].get(
-              'https://www.amazon.co.jp/s?k=' + putKeyword + '&page=' + pageNum + '&node=' + node
+              'https://www.amazon.co.jp/s?k=' +
+                putKeyword +
+                '&page=' +
+                pageNum +
+                '&node=' +
+                node +
+                '&ref=sr_st_price-desc-rank'
             )
           }
           if (pageNum !== 1 && isFirstLoad) {
             driver[(pageNum % 2) + 1].get(
-              'https://www.amazon.co.jp/s?k=' + putKeyword + '&page=' + pageNum + '&node=' + node
+              'https://www.amazon.co.jp/s?k=' +
+                putKeyword +
+                '&page=' +
+                pageNum +
+                '&node=' +
+                node +
+                '&ref=sr_st_price-desc-rank'
             )
           }
           driver[((pageNum + 1) % 2) + 1].get(
@@ -283,7 +295,8 @@ async function getAmazonInfo() {
               '&page=' +
               (pageNum + 1) +
               '&node=' +
-              node
+              node +
+              '&ref=sr_st_price-desc-rank'
           )
 
           await waitEl(driver[n], '#search', 50000)
@@ -356,8 +369,8 @@ async function getAmazonInfo() {
                   '.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole'
                 )
                 priceInJp = priceInJp.replace(/,/g, '').replace('￥', '')
-
-                if (Number(priceInJp) > 3500 && !itemsData.getDocById(asin)?.id) {
+                if (Number(priceInJp) < 3500) break
+                if (Number(priceInJp) >= 3500 && !itemsData.getDocById(asin)?.id) {
                   await driverInKeepa.get('https://keepa.com/#!product/1-' + asin)
                   try {
                     await waitEl(driverInKeepa, 'span.priceNewsss', 1000)
@@ -482,6 +495,10 @@ async function getAmazonInfo() {
 
 ;(async () => {
   while (true) {
-    await getAmazonInfo()
+    try {
+      await getAmazonInfo()
+    } catch (e) {
+      console.log(e)
+    }
   }
 })()
