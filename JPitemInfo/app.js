@@ -369,7 +369,7 @@ async function getAmazonInfo() {
                   '.s-result-item.s-asin:nth-child(' + i + ') span.a-price-whole'
                 )
                 priceInJp = priceInJp.replace(/,/g, '').replace('￥', '')
-                if (Number(priceInJp) < 3500) break
+
                 if (Number(priceInJp) >= 3500 && !itemsData.getDocById(asin)?.id) {
                   await driverInKeepa.get('https://keepa.com/#!product/1-' + asin)
                   try {
