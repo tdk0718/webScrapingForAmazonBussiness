@@ -246,7 +246,7 @@ async function getAmazonInfo() {
         await clickByCss(driver, "#grid-tools-finder > div:nth-child(1) > span.tool__export > span");
         await clickByCss(driver, "#exportSubmit");
         const res = await listFiles("/Users/tadakimatsushita/Downloads");
-        await import_fs.default.readFile(res.path, "utf-8", (err, data) => {
+        await import_fs.default.readFile(res.path, "utf-8", async (err, data) => {
           if (err)
             throw err;
           const lines = data.split("\n");
@@ -267,8 +267,9 @@ async function getAmazonInfo() {
           }, []);
           console.log(fieldTitle);
           lines.shift();
-          lines.forEach(async (eachLine) => {
-            let recordData = eachLine.split('","').reduce((obj, val, index) => {
+          for (let t = 0; t < lines.length; t++) {
+            const eachLine = lines[t];
+            const recordData = eachLine.split('","').reduce((obj, val, index) => {
               const getField = fieldTitle.find((title) => title.index === index);
               if (getField) {
                 const getFieldInfo = cellName.find((f) => f.field === getField.field);
@@ -285,9 +286,8 @@ async function getAmazonInfo() {
               }
               return obj;
             }, {});
-            recordData = __spreadValues(__spreadValues({}, recordData), { created_at: new Date(), accessId });
-            await jpItemRef.doc(recordData.asin).set(recordData);
-          });
+            await jpItemRef.doc(recordData.asin).set(__spreadValues(__spreadValues({}, recordData), { created_at: new Date(), accessId }));
+          }
         });
         import_fs.default.unlinkSync(res.path);
         const total = await getTextByCss(driver, "#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > span:nth-child(4)");

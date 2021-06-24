@@ -16,42 +16,54 @@ import { getUSDoler } from './helper/getUSDoler'
 import { keepaLogin } from './helper/keepaLogin'
 import { sort } from 'fast-sort'
 
+const is_windows = process.platform === 'win32'
+const is_mac = process.platform === 'darwin'
+const is_linux = process.platform === 'linux'
+
 /**
  * 指定したディレクトリ配下のファイルを再帰的にリストアップする
  * @param {string} dirPath 対象ディレクトリのフルパス
  * @return {Array<string>} ファイルのフルパス
  */
 const listFiles = dirPath => {
-  const files = []
-  const paths = fs.readdirSync(dirPath)
-
-  for (let name of paths) {
+  return new Promise(async (resolve, reject) => {
     try {
-      if (name.indexOf('Product_Finder') !== -1) {
-        const path = `${dirPath}/${name}`
+      let reDirPath = is_windows ? dirPath.replace(/¥/g, '\\') : dirPath
 
-        const stat = fs.statSync(path)
-        const { ctime } = stat
-        switch (true) {
-          case stat.isFile():
-            const sortNum = new Date(ctime)
-            files.push({ path, sortNum: sortNum.getTime() })
-            break
+      const files = []
+      const paths = fs.readdirSync(dirPath)
 
-          case stat.isDirectory():
-            break
+      for (let name of paths) {
+        try {
+          if (name.indexOf('Product_Finder') !== -1) {
+            const path = is_windows ? `${dirPath}¥${name}` : `${dirPath}/${name}`
 
-          default:
+            const stat = fs.statSync(path.replace(/¥/g, '\\'))
+            const { ctime } = stat
+            switch (true) {
+              case stat.isFile():
+                const sortNum = new Date(ctime)
+                files.push({ path: path.replace(/¥/g, '\\'), sortNum: sortNum.getTime() })
+                break
+
+              case stat.isDirectory():
+                break
+
+              default:
+            }
+          }
+        } catch (err) {
+          console.error('error:', err.message)
         }
       }
-    } catch (err) {
-      console.error('error:', err.message)
+
+      const res = sort(files).desc(e => e.sortNum)
+
+      resolve(res[0])
+    } catch (e) {
+      reject(new Error(e))
     }
-  }
-
-  const res = sort(files).desc(e => e.sortNum)
-
-  return res[0]
+  })
 }
 
 import fs from 'fs'
@@ -67,6 +79,8 @@ import {
   getTextByXpath,
 } from './helper/seleniumHelper'
 import { keywords, categories, cellName } from './type/defaultData'
+import { resolve } from 'path'
+import { reject } from 'core-js/fn/promise'
 
 const app = Firebase.initializeApp({
   apiKey: 'AIzaSyCj9Vxn7bQCy80iwxR8fB3HA9iGgySUrBI',
@@ -260,7 +274,7 @@ async function getAmazonInfo() {
 
         const res = await listFiles('/Users/tadakimatsushita/Downloads')
 
-        await fs.readFile(res.path, 'utf-8', (err, data) => {
+        await fs.readFile(res.path, 'utf-8', async (err, data) => {
           if (err) throw err
           const lines = data.split('\n')
 
@@ -285,8 +299,9 @@ async function getAmazonInfo() {
 
           lines.shift()
 
-          lines.forEach(async eachLine => {
-            let recordData = eachLine.split('","').reduce((obj, val, index) => {
+          for (let t = 0; t < lines.length; t++) {
+            const eachLine = lines[t]
+            const recordData = eachLine.split('","').reduce((obj, val, index) => {
               const getField = fieldTitle.find(title => title.index === index)
               if (getField) {
                 const getFieldInfo = cellName.find(f => f.field === getField.field)
@@ -307,9 +322,10 @@ async function getAmazonInfo() {
               }
               return obj
             }, {})
-            recordData = { ...recordData, ...{ created_at: new Date(), accessId } }
-            await jpItemRef.doc(recordData.asin).set(recordData)
-          })
+            await jpItemRef
+              .doc(recordData.asin)
+              .set({ ...recordData, ...{ created_at: new Date(), accessId } })
+          }
         })
 
         fs.unlinkSync(res.path)
