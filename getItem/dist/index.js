@@ -54,7 +54,7 @@ var import_selenium_webdriver3 = __toModule(require("selenium-webdriver"));
 var import_selenium_webdriver4 = __toModule(require("selenium-webdriver"));
 var { Builder, By, until } = import_selenium_webdriver4.default;
 function keepaLogin(driver) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve2, reject) => {
     try {
       await driver.get("https://keepa.com/#");
       await driver.wait(until.elementLocated(By.id("panelUserRegisterLogin")), 1e4);
@@ -62,7 +62,7 @@ function keepaLogin(driver) {
       await driver.findElement(By.id("username")).sendKeys("t.matsushita0718@gmail.com");
       await driver.findElement(By.id("password")).sendKeys("tadaki4281");
       await driver.findElement(By.id("submitLogin")).click();
-      resolve("ok");
+      resolve2("ok");
     } catch (e) {
       reject(e);
     }
@@ -77,57 +77,57 @@ var import_fs = __toModule(require("fs"));
 var import_selenium_webdriver5 = __toModule(require("selenium-webdriver"));
 var { Builder: Builder2, By: By2, until: until2 } = import_selenium_webdriver5.default;
 function createDriver(capabilities) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve2, reject) => {
     try {
       const driver = await new Builder2().withCapabilities(capabilities).build();
-      resolve(driver);
+      resolve2(driver);
     } catch (e) {
       console.log(e);
     }
   });
 }
 function getTextByCss(driver, css, timeout = 1e5) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve2, reject) => {
     try {
       await driver.wait(until2.elementLocated(By2.css(css)), timeout);
       const result = await driver.findElement(By2.css(css)).getText();
-      resolve(result);
+      resolve2(result);
     } catch (e) {
       console.log(e);
-      resolve("");
+      resolve2("");
     }
   });
 }
 function clickByCss(driver, css, timeout = 1e5) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve2, reject) => {
     try {
       await driver.wait(until2.elementLocated(By2.css(css)), timeout);
       await driver.findElement(By2.css(css)).click();
-      resolve();
+      resolve2();
     } catch (e) {
       console.log(e);
     }
   });
 }
 function gotoUrl(driver, url) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve2, reject) => {
     try {
       let currentUrl = await driver.getCurrentUrl();
       while (decodeURI(currentUrl) !== decodeURI(url)) {
         await driver.get(url);
         currentUrl = await driver.getCurrentUrl();
       }
-      resolve();
+      resolve2();
     } catch (e) {
       console.log(e);
     }
   });
 }
 function waitEl(driver, css, seconds = 1e5) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve2, reject) => {
     try {
       await driver.wait(until2.elementLocated(By2.css(css)), seconds);
-      resolve("ok");
+      resolve2("ok");
     } catch (e) {
       console.log(e);
     }
@@ -177,31 +177,42 @@ var cellName = [
 ];
 
 // app.js
+var import_path = __toModule(require("path"));
+var is_windows = process.platform === "win32";
+var is_mac = process.platform === "darwin";
+var is_linux = process.platform === "linux";
 var listFiles = (dirPath) => {
-  const files = [];
-  const paths = import_fs.default.readdirSync(dirPath);
-  for (let name of paths) {
+  return new Promise(async (resolve2, reject) => {
     try {
-      if (name.indexOf("Product_Finder") !== -1) {
-        const path = `${dirPath}/${name}`;
-        const stat = import_fs.default.statSync(path);
-        const { ctime } = stat;
-        switch (true) {
-          case stat.isFile():
-            const sortNum = new Date(ctime);
-            files.push({ path, sortNum: sortNum.getTime() });
-            break;
-          case stat.isDirectory():
-            break;
-          default:
+      let reDirPath = is_windows ? dirPath.replace(/¥/g, "\\") : dirPath;
+      const files = [];
+      const paths = import_fs.default.readdirSync(dirPath);
+      for (let name of paths) {
+        try {
+          if (name.indexOf("Product_Finder") !== -1) {
+            const path = is_windows ? `${dirPath}\xA5${name}` : `${dirPath}/${name}`;
+            const stat = import_fs.default.statSync(path.replace(/¥/g, "\\"));
+            const { ctime } = stat;
+            switch (true) {
+              case stat.isFile():
+                const sortNum = new Date(ctime);
+                files.push({ path: path.replace(/¥/g, "\\"), sortNum: sortNum.getTime() });
+                break;
+              case stat.isDirectory():
+                break;
+              default:
+            }
+          }
+        } catch (err) {
+          console.error("error:", err.message);
         }
       }
-    } catch (err) {
-      console.error("error:", err.message);
+      const res = (0, import_fast_sort.sort)(files).desc((e) => e.sortNum);
+      resolve2(res[0]);
+    } catch (e) {
+      reject(new Error(e));
     }
-  }
-  const res = (0, import_fast_sort.sort)(files).desc((e) => e.sortNum);
-  return res[0];
+  });
 };
 var app = import_app.default.initializeApp({
   apiKey: "AIzaSyCj9Vxn7bQCy80iwxR8fB3HA9iGgySUrBI",
@@ -245,7 +256,8 @@ async function getAmazonInfo() {
         await waitEl(driver, "#grid-asin-finder > div > div.ag-root-wrapper-body.ag-layout-normal > div.ag-root.ag-unselectable.ag-layout-normal > div.ag-body-viewport.ag-layout-normal.ag-row-no-animation > div.ag-center-cols-clipper > div > div > div:nth-child(1) > div:nth-child(3) > a > span", 1e7);
         await clickByCss(driver, "#grid-tools-finder > div:nth-child(1) > span.tool__export > span");
         await clickByCss(driver, "#exportSubmit");
-        const res = await listFiles("/Users/tadakimatsushita/Downloads");
+        const df = is_mac ? "/Users/tadakimatsushita/Downloads" : "C:\xA5Users\xA5Administrator\xA5Downloads";
+        const res = await listFiles(df);
         await import_fs.default.readFile(res.path, "utf-8", async (err, data) => {
           if (err)
             throw err;

@@ -15,7 +15,6 @@ import { getAmazonUSInfo } from './getAmazonUSInfo'
 import { getUSDoler } from './helper/getUSDoler'
 import { keepaLogin } from './helper/keepaLogin'
 import { sort } from 'fast-sort'
-import { downloadsFolder } from 'downloads-folder'
 
 const is_windows = process.platform === 'win32'
 const is_mac = process.platform === 'darwin'
@@ -272,7 +271,8 @@ async function getAmazonInfo() {
         await clickByCss(driver, '#grid-tools-finder > div:nth-child(1) > span.tool__export > span')
         await clickByCss(driver, '#exportSubmit')
 
-        const res = await listFiles(downloadsFolder())
+        const df = is_mac ? '/Users/tadakimatsushita/Downloads' : 'C:¥Users¥Administrator¥Downloads'
+        const res = await listFiles(df)
 
         await fs.readFile(res.path, 'utf-8', async (err, data) => {
           if (err) throw err
