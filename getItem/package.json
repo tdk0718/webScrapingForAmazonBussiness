@@ -13,6 +13,7 @@
     "core-js": "^3.14.0"
   },
   "dependencies": {
+    "downloads-folder": "^3.0.1",
     "fs": "*",
     "sort-anything": "^1.0.1"
   }

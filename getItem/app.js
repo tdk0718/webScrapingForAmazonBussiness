@@ -15,6 +15,7 @@ import { getAmazonUSInfo } from './getAmazonUSInfo'
 import { getUSDoler } from './helper/getUSDoler'
 import { keepaLogin } from './helper/keepaLogin'
 import { sort } from 'fast-sort'
+import { downloadsFolder } from 'downloads-folder'
 
 const is_windows = process.platform === 'win32'
 const is_mac = process.platform === 'darwin'
@@ -80,7 +81,6 @@ import {
 } from './helper/seleniumHelper'
 import { keywords, categories, cellName } from './type/defaultData'
 import { resolve } from 'path'
-import { reject } from 'core-js/fn/promise'
 
 const app = Firebase.initializeApp({
   apiKey: 'AIzaSyCj9Vxn7bQCy80iwxR8fB3HA9iGgySUrBI',
@@ -272,7 +272,7 @@ async function getAmazonInfo() {
         await clickByCss(driver, '#grid-tools-finder > div:nth-child(1) > span.tool__export > span')
         await clickByCss(driver, '#exportSubmit')
 
-        const res = await listFiles('/Users/tadakimatsushita/Downloads')
+        const res = await listFiles(downloadsFolder())
 
         await fs.readFile(res.path, 'utf-8', async (err, data) => {
           if (err) throw err
