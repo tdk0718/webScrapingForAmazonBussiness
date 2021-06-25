@@ -243,7 +243,7 @@ async function getAmazonInfo() {
         driver,
         '#grid-tools-finder > div:nth-child(1) > span.tool__row.mdc-menu-anchor'
       )
-      await clickByCss(driver, '#tool-row-menu > ul > li:nth-child(2)') // 7
+      await clickByCss(driver, '#tool-row-menu > ul > li:nth-child(7)') // 7
       let pageNnumber = 1
       while (!isComp) {
         await waitEl(driver, '.cssload-box-loading', 100000)
