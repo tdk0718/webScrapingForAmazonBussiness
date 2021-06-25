@@ -282,10 +282,7 @@ async function getAmazonInfo() {
   const logsRef = await db.collection(`Logs/${currentDate}/Logs`);
   console.log("start");
   const capabilities = import_selenium_webdriver6.default.Capabilities.chrome();
-  capabilities.set("chromeOptions", {
-    args: ["--headless", "--no-sandbox", "--disable-gpu", `--window-size=1980,400`],
-    prefs: { "download.default_directory": "./file" }
-  });
+  capabilities.set("chromeOptions", {});
   const driver = await createDriver(capabilities);
   await keepaLogin(driver);
   let logsDataObj = logsData.getLatestDoc();
@@ -305,52 +302,56 @@ async function getAmazonInfo() {
         await clickByCss(driver, "#exportSubmit");
         const df = is_mac ? "/Users/tadakimatsushita/Downloads" : "C:\xA5Users\xA5Administrator\xA5Downloads";
         const res = await listFiles(df);
-        await import_fs.default.readFile(res.path, "utf-8", async (err, data) => {
-          if (err)
-            throw err;
-          const lines = data.split("\n");
-          const fieldTitle = lines[0].split('","').reduce((arr, element) => {
-            const cellInfo = cellName.find((e) => {
-              return element.replace(/"/g, "") === e.text;
-            });
-            if (cellInfo) {
-              return [
-                ...arr,
-                {
-                  index: lines[0].split('","').findIndex((el) => el === element),
-                  field: cellInfo.field
-                }
-              ];
-            }
-            return arr;
-          }, []);
-          lines.shift();
-          for (let t = 0; t < lines.length; t++) {
-            const eachLine = lines[t];
-            const recordData = eachLine.split('","').reduce((obj, val, index) => {
-              const getField = fieldTitle.find((title) => title.index === index);
-              if (getField) {
-                const getFieldInfo = cellName.find((f) => f.field === getField.field);
-                let revisedVal = val.replace(/"/g, "");
-                if (getFieldInfo == null ? void 0 : getFieldInfo.omit) {
-                  revisedVal = getFieldInfo.omit.reduce((st, el) => {
-                    return st.replace(el, "");
-                  }, revisedVal);
-                }
-                if ((getFieldInfo == null ? void 0 : getFieldInfo.type) === "Number") {
-                  revisedVal = Number(revisedVal);
-                }
-                return __spreadValues(__spreadValues({}, obj), { [`${getField.field}`]: revisedVal });
+        const fsRes = await import_fs.default.readFile(res.path, "utf-8", async (err, data) => {
+          return new Promise(async (resolve2, reject) => {
+            if (err)
+              reject(err);
+            const lines = data.split("\n");
+            const fieldTitle = lines[0].split('","').reduce((arr, element) => {
+              const cellInfo = cellName.find((e) => {
+                return element.replace(/"/g, "") === e.text;
+              });
+              if (cellInfo) {
+                return [
+                  ...arr,
+                  {
+                    index: lines[0].split('","').findIndex((el) => el === element),
+                    field: cellInfo.field
+                  }
+                ];
               }
-              return obj;
-            }, {});
-            console.log(getCondition(recordData));
-            if (getCondition(recordData)) {
-              await jpItemRef.doc(recordData.asin).set(__spreadValues(__spreadValues({}, recordData), { created_at: new Date(), accessId }));
+              return arr;
+            }, []);
+            lines.shift();
+            for (let t = 0; t < lines.length; t++) {
+              const eachLine = lines[t];
+              const recordData = eachLine.split('","').reduce((obj, val, index) => {
+                const getField = fieldTitle.find((title) => title.index === index);
+                if (getField) {
+                  const getFieldInfo = cellName.find((f) => f.field === getField.field);
+                  let revisedVal = val.replace(/"/g, "");
+                  if (getFieldInfo == null ? void 0 : getFieldInfo.omit) {
+                    revisedVal = getFieldInfo.omit.reduce((st, el) => {
+                      return st.replace(el, "");
+                    }, revisedVal);
+                  }
+                  if ((getFieldInfo == null ? void 0 : getFieldInfo.type) === "Number") {
+                    revisedVal = Number(revisedVal);
+                  }
+                  return __spreadValues(__spreadValues({}, obj), { [`${getField.field}`]: revisedVal });
+                }
+                return obj;
+              }, {});
+              if (getCondition(recordData)) {
+                console.log(t);
+                await jpItemRef.doc(recordData.asin).set(__spreadValues(__spreadValues({}, recordData), { created_at: new Date(), accessId }));
+              }
             }
-          }
+            resolve2("ok");
+            import_fs.default.unlinkSync(res.path);
+          });
         });
-        import_fs.default.unlinkSync(res.path);
+        console.log(fsRes);
         const total = await getTextByCss(driver, "#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > span:nth-child(4)");
         const current2 = await getTextByCss(driver, "#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > span:nth-child(3)");
         const logInfo = {

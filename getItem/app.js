@@ -256,64 +256,68 @@ async function getAmazonInfo() {
         const df = is_mac ? '/Users/tadakimatsushita/Downloads' : 'C:¥Users¥Administrator¥Downloads'
         const res = await listFiles(df)
 
-        await fs.readFile(res.path, 'utf-8', async (err, data) => {
-          if (err) throw err
-          const lines = data.split('\n')
+        const fsRes = await fs.readFile(res.path, 'utf-8', async (err, data) => {
+          return new Promise(async (resolve, reject) => {
+            if (err) reject(err)
+            const lines = data.split('\n')
 
-          const fieldTitle = lines[0].split('","').reduce((arr, element) => {
-            const cellInfo = cellName.find(e => {
-              return element.replace(/"/g, '') === e.text
-            })
+            const fieldTitle = lines[0].split('","').reduce((arr, element) => {
+              const cellInfo = cellName.find(e => {
+                return element.replace(/"/g, '') === e.text
+              })
 
-            if (cellInfo) {
-              return [
-                ...arr,
-                {
-                  index: lines[0].split('","').findIndex(el => el === element),
-                  field: cellInfo.field,
-                },
-              ]
-            }
-
-            return arr
-          }, [])
-
-          lines.shift()
-
-          for (let t = 0; t < lines.length; t++) {
-            const eachLine = lines[t]
-            const recordData = eachLine.split('","').reduce((obj, val, index) => {
-              const getField = fieldTitle.find(title => title.index === index)
-              if (getField) {
-                const getFieldInfo = cellName.find(f => f.field === getField.field)
-
-                let revisedVal = val.replace(/"/g, '')
-
-                if (getFieldInfo?.omit) {
-                  revisedVal = getFieldInfo.omit.reduce((st, el) => {
-                    return st.replace(el, '')
-                  }, revisedVal)
-                }
-
-                if (getFieldInfo?.type === 'Number') {
-                  revisedVal = Number(revisedVal)
-                }
-
-                return { ...obj, ...{ [`${getField.field}`]: revisedVal } }
+              if (cellInfo) {
+                return [
+                  ...arr,
+                  {
+                    index: lines[0].split('","').findIndex(el => el === element),
+                    field: cellInfo.field,
+                  },
+                ]
               }
-              return obj
-            }, {})
 
-            if (getCondition(recordData)) {
-              console.log(t)
-              await jpItemRef
-                .doc(recordData.asin)
-                .set({ ...recordData, ...{ created_at: new Date(), accessId } })
+              return arr
+            }, [])
+
+            lines.shift()
+
+            for (let t = 0; t < lines.length; t++) {
+              const eachLine = lines[t]
+              const recordData = eachLine.split('","').reduce((obj, val, index) => {
+                const getField = fieldTitle.find(title => title.index === index)
+                if (getField) {
+                  const getFieldInfo = cellName.find(f => f.field === getField.field)
+
+                  let revisedVal = val.replace(/"/g, '')
+
+                  if (getFieldInfo?.omit) {
+                    revisedVal = getFieldInfo.omit.reduce((st, el) => {
+                      return st.replace(el, '')
+                    }, revisedVal)
+                  }
+
+                  if (getFieldInfo?.type === 'Number') {
+                    revisedVal = Number(revisedVal)
+                  }
+
+                  return { ...obj, ...{ [`${getField.field}`]: revisedVal } }
+                }
+                return obj
+              }, {})
+
+              if (getCondition(recordData)) {
+                console.log(t)
+                await jpItemRef
+                  .doc(recordData.asin)
+                  .set({ ...recordData, ...{ created_at: new Date(), accessId } })
+              }
             }
-          }
+            resolve('ok')
+            fs.unlinkSync(res.path)
+          })
         })
 
-        fs.unlinkSync(res.path)
+        console.log(fsRes)
 
         const total = await getTextByCss(
           driver,
