@@ -334,7 +334,7 @@ async function getAmazonInfo() {
           searchTextIndex: i,
           accessId,
         }
-        await logsRef.doc().set(logInfos)
+        await logsRef.doc().set(logInfo)
         if (total !== current) {
           pageNnumber += 1
           clickByCss(
