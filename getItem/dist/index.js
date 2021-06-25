@@ -181,6 +181,58 @@ var import_path = __toModule(require("path"));
 var is_windows = process.platform === "win32";
 var is_mac = process.platform === "darwin";
 var is_linux = process.platform === "linux";
+var app = import_app.default.initializeApp({
+  apiKey: "AIzaSyCj9Vxn7bQCy80iwxR8fB3HA9iGgySUrBI",
+  authDomain: "webscrapingforbussiness.firebaseapp.com",
+  projectId: "webscrapingforbussiness",
+  storageBucket: "webscrapingforbussiness.appspot.com",
+  messagingSenderId: "843243345021",
+  appId: "1:843243345021:web:908bb33aaaeec9c59dcd14"
+});
+var db = import_app.default.firestore(app);
+var current = new Date();
+var currentDate = current.getFullYear() + "-" + (current.getMonth() + 1);
+var getCondition = (obj) => {
+  if ((obj == null ? void 0 : obj.Reviews) < 4)
+    return false;
+  if (!(obj == null ? void 0 : obj.RankingDrop30))
+    return false;
+  if ((obj == null ? void 0 : obj.RankingDrop30) < 1)
+    return false;
+  return true;
+};
+var logsData = {
+  logDB: [],
+  async stream() {
+    await db.collection("Logs").doc(currentDate).set({ created_at: current });
+    await db.collection(`Logs/${currentDate}/Logs`).onSnapshot((res) => {
+      this.logDB = res;
+    });
+  },
+  async getDocs() {
+    const result = [];
+    this.logDB.forEach((el) => {
+      result.push(el.data());
+    });
+    return result;
+  },
+  getLatestDoc() {
+    let result = [];
+    this.logDB.forEach((el) => {
+      result.push(el.data());
+    });
+    if (!result.length)
+      return [];
+    const maxSearchIndex = (0, import_fast_sort.sort)(result).desc((r) => r.searchTextIndex)[0].searchTextIndex;
+    const maxNodeIndex = (0, import_fast_sort.sort)(result.filter((e) => e.searchTextIndex === maxSearchIndex)).desc((r) => r.nodeIndex)[0].nodeIndex;
+    const maxPageNum = (0, import_fast_sort.sort)(result.filter((e) => e.searchTextIndex === maxSearchIndex && e.nodeIndex === maxNodeIndex)).desc((r) => r.pageNum)[0].pageNum;
+    return {
+      nodeIndex: maxNodeIndex,
+      pageNum: maxPageNum,
+      searchTextIndex: maxSearchIndex
+    };
+  }
+};
 var listFiles = (dirPath) => {
   return new Promise(async (resolve2, reject) => {
     try {
@@ -214,17 +266,6 @@ var listFiles = (dirPath) => {
     }
   });
 };
-var app = import_app.default.initializeApp({
-  apiKey: "AIzaSyCj9Vxn7bQCy80iwxR8fB3HA9iGgySUrBI",
-  authDomain: "webscrapingforbussiness.firebaseapp.com",
-  projectId: "webscrapingforbussiness",
-  storageBucket: "webscrapingforbussiness.appspot.com",
-  messagingSenderId: "843243345021",
-  appId: "1:843243345021:web:908bb33aaaeec9c59dcd14"
-});
-var db = import_app.default.firestore(app);
-var current = new Date();
-var currentDate = current.getFullYear() + "-" + (current.getMonth() + 1);
 function createNewAccessId() {
   const LENGTH = 20;
   const SOURCE = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUWXYZ0123456789";
@@ -236,7 +277,9 @@ function createNewAccessId() {
 }
 async function getAmazonInfo() {
   const accessId = createNewAccessId();
+  await logsData.stream();
   const jpItemRef = await db.collection(`ItemsJP/${currentDate}/Items`);
+  const logsRef = await db.collection(`Logs/${currentDate}/Logs`);
   console.log("start");
   const capabilities = import_selenium_webdriver6.default.Capabilities.chrome();
   capabilities.set("chromeOptions", {
@@ -245,12 +288,16 @@ async function getAmazonInfo() {
   });
   const driver = await createDriver(capabilities);
   await keepaLogin(driver);
-  for (let i = 0; i <= keywords.length - 1; i++) {
-    for (let j = 0; j <= categories.length - 1; j++) {
+  let logsDataObj = logsData.getLatestDoc();
+  for (let i = (logsDataObj == null ? void 0 : logsDataObj.searchTextIndex) ? logsDataObj.searchTextIndex : 0; i <= keywords.length - 1; i++) {
+    for (let j = (logsDataObj == null ? void 0 : logsDataObj.categoryNode) ? logsDataObj.categoryNode : 0; j <= categories.length - 1; j++) {
+      if ((logsDataObj == null ? void 0 : logsDataObj.pageNum) === 2)
+        continue;
       await gotoUrl(driver, 'https://keepa.com/#!finder/{"f":{"title":{"filterType":"text","type":"contains","filter":"' + keywords[i] + '"},"SALES_deltaPercent90":{"filterType":"number","type":"greaterThanOrEqual","filter":1,"filterTo":null},"COUNT_NEW_current":{"filterType":"number","type":"greaterThanOrEqual","filter":1,"filterTo":null},"rootCategory":{"filterType":"singleChoice","filter":"' + categories[j] + '","type":"equals"}},"s":[{"colId":"SALES_current","sort":"asc"}],"t":"g"}');
       let isComp = false;
       await clickByCss(driver, "#grid-tools-finder > div:nth-child(1) > span.tool__row.mdc-menu-anchor");
       await clickByCss(driver, "#tool-row-menu > ul > li:nth-child(7)");
+      let pageNnumber = 1;
       while (!isComp) {
         await waitEl(driver, ".cssload-box-loading", 1e3);
         await waitEl(driver, "#grid-asin-finder > div > div.ag-root-wrapper-body.ag-layout-normal > div.ag-root.ag-unselectable.ag-layout-normal > div.ag-body-viewport.ag-layout-normal.ag-row-no-animation > div.ag-center-cols-clipper > div > div > div:nth-child(1) > div:nth-child(3) > a > span", 1e7);
@@ -277,7 +324,6 @@ async function getAmazonInfo() {
             }
             return arr;
           }, []);
-          console.log(fieldTitle);
           lines.shift();
           for (let t = 0; t < lines.length; t++) {
             const eachLine = lines[t];
@@ -298,13 +344,25 @@ async function getAmazonInfo() {
               }
               return obj;
             }, {});
-            await jpItemRef.doc(recordData.asin).set(__spreadValues(__spreadValues({}, recordData), { created_at: new Date(), accessId }));
+            if (getCondition(recordData)) {
+              await jpItemRef.doc(recordData.asin).set(__spreadValues(__spreadValues({}, recordData), { created_at: new Date(), accessId }));
+            }
           }
         });
         import_fs.default.unlinkSync(res.path);
         const total = await getTextByCss(driver, "#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > span:nth-child(4)");
         const current2 = await getTextByCss(driver, "#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > span:nth-child(3)");
+        const logInfo = {
+          created_at: new Date(),
+          pageNum: pageNnumber,
+          categoryNode: j,
+          searchText: keywords[i],
+          searchTextIndex: i,
+          accessId
+        };
+        await logsRef.doc().set(logInfos);
         if (total !== current2) {
+          pageNnumber += 1;
           clickByCss(driver, "#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > div:nth-child(5) > button");
         }
       }

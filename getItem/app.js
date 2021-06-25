@@ -109,12 +109,12 @@ const listFiles = dirPath => {
       let reDirPath = is_windows ? dirPath.replace(/¥/g, '\\') : dirPath
 
       const files = []
-      const paths = fs.readdirSync(dirPath)
+      const paths = fs.readdirSync(reDirPath)
 
       for (let name of paths) {
         try {
           if (name.indexOf('Product_Finder') !== -1) {
-            const path = is_windows ? `${dirPath}¥${name}` : `${dirPath}/${name}`
+            const path = is_windows ? `${reDirPath}¥${name}` : `${reDirPath}/${name}`
 
             const stat = fs.statSync(path.replace(/¥/g, '\\'))
             const { ctime } = stat
