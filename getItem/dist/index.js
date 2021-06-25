@@ -238,11 +238,11 @@ var listFiles = (dirPath) => {
     try {
       let reDirPath = is_windows ? dirPath.replace(/¥/g, "\\") : dirPath;
       const files = [];
-      const paths = import_fs.default.readdirSync(dirPath);
+      const paths = import_fs.default.readdirSync(reDirPath);
       for (let name of paths) {
         try {
           if (name.indexOf("Product_Finder") !== -1) {
-            const path = is_windows ? `${dirPath}\xA5${name}` : `${dirPath}/${name}`;
+            const path = is_windows ? `${reDirPath}\xA5${name}` : `${reDirPath}/${name}`;
             const stat = import_fs.default.statSync(path.replace(/¥/g, "\\"));
             const { ctime } = stat;
             switch (true) {
@@ -296,10 +296,10 @@ async function getAmazonInfo() {
       await gotoUrl(driver, 'https://keepa.com/#!finder/{"f":{"title":{"filterType":"text","type":"contains","filter":"' + keywords[i] + '"},"SALES_deltaPercent90":{"filterType":"number","type":"greaterThanOrEqual","filter":1,"filterTo":null},"COUNT_NEW_current":{"filterType":"number","type":"greaterThanOrEqual","filter":1,"filterTo":null},"rootCategory":{"filterType":"singleChoice","filter":"' + categories[j] + '","type":"equals"}},"s":[{"colId":"SALES_current","sort":"asc"}],"t":"g"}');
       let isComp = false;
       await clickByCss(driver, "#grid-tools-finder > div:nth-child(1) > span.tool__row.mdc-menu-anchor");
-      await clickByCss(driver, "#tool-row-menu > ul > li:nth-child(7)");
+      await clickByCss(driver, "#tool-row-menu > ul > li:nth-child(2)");
       let pageNnumber = 1;
       while (!isComp) {
-        await waitEl(driver, ".cssload-box-loading", 1e3);
+        await waitEl(driver, ".cssload-box-loading", 1e5);
         await waitEl(driver, "#grid-asin-finder > div > div.ag-root-wrapper-body.ag-layout-normal > div.ag-root.ag-unselectable.ag-layout-normal > div.ag-body-viewport.ag-layout-normal.ag-row-no-animation > div.ag-center-cols-clipper > div > div > div:nth-child(1) > div:nth-child(3) > a > span", 1e7);
         await clickByCss(driver, "#grid-tools-finder > div:nth-child(1) > span.tool__export > span");
         await clickByCss(driver, "#exportSubmit");
@@ -344,6 +344,7 @@ async function getAmazonInfo() {
               }
               return obj;
             }, {});
+            console.log(getCondition(recordData));
             if (getCondition(recordData)) {
               await jpItemRef.doc(recordData.asin).set(__spreadValues(__spreadValues({}, recordData), { created_at: new Date(), accessId }));
             }
@@ -360,7 +361,7 @@ async function getAmazonInfo() {
           searchTextIndex: i,
           accessId
         };
-        await logsRef.doc().set(logInfos);
+        await logsRef.doc().set(logInfo);
         if (total !== current2) {
           pageNnumber += 1;
           clickByCss(driver, "#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > div:nth-child(5) > button");

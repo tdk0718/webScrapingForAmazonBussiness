@@ -53,7 +53,6 @@ const getCondition = obj => {
   if (obj?.Reviews < 4) return false
   if (!obj?.RankingDrop30) return false
   if (obj?.RankingDrop30 < 1) return false
-
   return true
 }
 const logsData = {
@@ -244,10 +243,10 @@ async function getAmazonInfo() {
         driver,
         '#grid-tools-finder > div:nth-child(1) > span.tool__row.mdc-menu-anchor'
       )
-      await clickByCss(driver, '#tool-row-menu > ul > li:nth-child(7)') // 7
+      await clickByCss(driver, '#tool-row-menu > ul > li:nth-child(2)') // 7
       let pageNnumber = 1
       while (!isComp) {
-        await waitEl(driver, '.cssload-box-loading', 1000)
+        await waitEl(driver, '.cssload-box-loading', 100000)
         await waitEl(
           driver,
           '#grid-asin-finder > div > div.ag-root-wrapper-body.ag-layout-normal > div.ag-root.ag-unselectable.ag-layout-normal > div.ag-body-viewport.ag-layout-normal.ag-row-no-animation > div.ag-center-cols-clipper > div > div > div:nth-child(1) > div:nth-child(3) > a > span',
@@ -309,6 +308,7 @@ async function getAmazonInfo() {
             }, {})
 
             if (getCondition(recordData)) {
+              console.log(t)
               await jpItemRef
                 .doc(recordData.asin)
                 .set({ ...recordData, ...{ created_at: new Date(), accessId } })
