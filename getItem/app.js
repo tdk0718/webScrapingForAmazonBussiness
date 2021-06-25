@@ -225,7 +225,6 @@ async function getAmazonInfo() {
       j <= categories.length - 1;
       j++
     ) {
-      if (logsDataObj?.pageNum === 2) continue
       await gotoUrl(
         driver,
         'https://keepa.com/#!finder/{"f":{"title":{"filterType":"text","type":"contains","filter":"' +
@@ -319,14 +318,6 @@ async function getAmazonInfo() {
 
         console.log(fsRes)
 
-        const total = await getTextByCss(
-          driver,
-          '#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > span:nth-child(4)'
-        )
-        const current = await getTextByCss(
-          driver,
-          '#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > span:nth-child(3)'
-        )
         const logInfo = {
           created_at: new Date(),
           pageNum: pageNnumber,
@@ -336,12 +327,22 @@ async function getAmazonInfo() {
           accessId,
         }
         await logsRef.doc().set(logInfo)
+        const total = await getTextByCss(
+          driver,
+          '#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > span:nth-child(4)'
+        )
+        const current = await getTextByCss(
+          driver,
+          '#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > span:nth-child(3)'
+        )
         if (total !== current) {
           pageNnumber += 1
           clickByCss(
             driver,
             '#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > div:nth-child(5) > button'
           )
+        } else {
+          continue
         }
       }
     }
