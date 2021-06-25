@@ -204,10 +204,7 @@ async function getAmazonInfo() {
   console.log('start')
 
   const capabilities = webdriver.Capabilities.chrome()
-  capabilities.set('chromeOptions', {
-    args: ['--headless', '--no-sandbox', '--disable-gpu', `--window-size=1980,400`],
-    prefs: { 'download.default_directory': './file' },
-  })
+  capabilities.set('chromeOptions', {})
 
   const driver = await createDriver(capabilities)
 
