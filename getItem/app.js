@@ -15,10 +15,88 @@ import { getAmazonUSInfo } from './getAmazonUSInfo'
 import { getUSDoler } from './helper/getUSDoler'
 import { keepaLogin } from './helper/keepaLogin'
 import { sort } from 'fast-sort'
+import fs from 'fs'
 
 const is_windows = process.platform === 'win32'
 const is_mac = process.platform === 'darwin'
 const is_linux = process.platform === 'linux'
+
+import {
+  getTextByCss,
+  countEls,
+  getAttrByCss,
+  waitEl,
+  createDriver,
+  clickByCss,
+  gotoUrl,
+  typeTextByCss,
+  getTextByXpath,
+} from './helper/seleniumHelper'
+import { keywords, categories, cellName } from './type/defaultData'
+import { resolve } from 'path'
+
+const app = Firebase.initializeApp({
+  apiKey: 'AIzaSyCj9Vxn7bQCy80iwxR8fB3HA9iGgySUrBI',
+  authDomain: 'webscrapingforbussiness.firebaseapp.com',
+  projectId: 'webscrapingforbussiness',
+  storageBucket: 'webscrapingforbussiness.appspot.com',
+  messagingSenderId: '843243345021',
+  appId: '1:843243345021:web:908bb33aaaeec9c59dcd14',
+})
+
+const db = Firebase.firestore(app)
+
+const current = new Date()
+const currentDate = current.getFullYear() + '-' + (current.getMonth() + 1)
+
+const getCondition = obj => {
+  if (obj?.Reviews < 4) return false
+  if (!obj?.RankingDrop30) return false
+  if (obj?.RankingDrop30 < 1) return false
+
+  return true
+}
+const logsData = {
+  logDB: [],
+  async stream() {
+    await db
+      .collection('Logs')
+      .doc(currentDate)
+      .set({ created_at: current })
+    await db.collection(`Logs/${currentDate}/Logs`).onSnapshot(res => {
+      this.logDB = res
+    })
+  },
+  async getDocs() {
+    const result = []
+
+    this.logDB.forEach(el => {
+      result.push(el.data())
+    })
+    return result
+  },
+  getLatestDoc() {
+    let result = []
+    this.logDB.forEach(el => {
+      result.push(el.data())
+    })
+    if (!result.length) return []
+    const maxSearchIndex = sort(result).desc(r => r.searchTextIndex)[0].searchTextIndex
+    const maxNodeIndex = sort(result.filter(e => e.searchTextIndex === maxSearchIndex)).desc(
+      r => r.nodeIndex
+    )[0].nodeIndex
+    const maxPageNum = sort(
+      result.filter(e => e.searchTextIndex === maxSearchIndex && e.nodeIndex === maxNodeIndex)
+    ).desc(r => r.pageNum)[0].pageNum
+
+    return {
+      nodeIndex: maxNodeIndex,
+      pageNum: maxPageNum,
+
+      searchTextIndex: maxSearchIndex,
+    }
+  },
+}
 
 /**
  * 指定したディレクトリ配下のファイルを再帰的にリストアップする
@@ -65,35 +143,6 @@ const listFiles = dirPath => {
     }
   })
 }
-
-import fs from 'fs'
-import {
-  getTextByCss,
-  countEls,
-  getAttrByCss,
-  waitEl,
-  createDriver,
-  clickByCss,
-  gotoUrl,
-  typeTextByCss,
-  getTextByXpath,
-} from './helper/seleniumHelper'
-import { keywords, categories, cellName } from './type/defaultData'
-import { resolve } from 'path'
-
-const app = Firebase.initializeApp({
-  apiKey: 'AIzaSyCj9Vxn7bQCy80iwxR8fB3HA9iGgySUrBI',
-  authDomain: 'webscrapingforbussiness.firebaseapp.com',
-  projectId: 'webscrapingforbussiness',
-  storageBucket: 'webscrapingforbussiness.appspot.com',
-  messagingSenderId: '843243345021',
-  appId: '1:843243345021:web:908bb33aaaeec9c59dcd14',
-})
-
-const db = Firebase.firestore(app)
-
-const current = new Date()
-const currentDate = current.getFullYear() + '-' + (current.getMonth() + 1)
 
 //TODO 新しいランダムIDを生成する関数
 function createNewAccessId() {
@@ -144,88 +193,14 @@ const itemsData = {
   },
 }
 
-const categoriesData = {
-  keywordDB: [],
-  async stream() {
-    const ref = await db.collection('Category')
-    ref.onSnapshot(res => {
-      this.categoryDB = res
-    })
-  },
-  getDocs() {
-    const result = []
-
-    this.categoryDB.forEach(el => {
-      result.push(el.data())
-    })
-    return result
-  },
-}
-
-const logsData = {
-  logDB: [],
-  async stream() {
-    await db
-      .collection('Logs')
-      .doc(currentDate)
-      .set({ created_at: current })
-    await db.collection(`Logs/${currentDate}/Logs`).onSnapshot(res => {
-      this.logDB = res
-    })
-  },
-  async getDocs() {
-    const result = []
-
-    this.logDB.forEach(el => {
-      result.push(el.data())
-    })
-    return result
-  },
-  getLatestDoc() {
-    let result = []
-    this.logDB.forEach(el => {
-      result.push(el.data())
-    })
-    if (!result.length) return []
-    const maxSearchIndex = sort(result).desc(r => r.searchTextIndex)[0].searchTextIndex
-    const maxNodeIndex = sort(result.filter(e => e.searchTextIndex === maxSearchIndex)).desc(
-      r => r.nodeIndex
-    )[0].nodeIndex
-    const maxPageNum = sort(
-      result.filter(e => e.searchTextIndex === maxSearchIndex && e.nodeIndex === maxNodeIndex)
-    ).desc(r => r.pageNum)[0].pageNum
-
-    return {
-      nodeIndex: maxNodeIndex,
-      pageNum: maxPageNum,
-
-      searchTextIndex: maxSearchIndex,
-    }
-  },
-}
-
-const keywordData = {
-  keywordDB: [],
-  async stream() {
-    const ref = await db.collection('Keyword')
-    ref.onSnapshot(res => {
-      this.keywordDB = res
-    })
-  },
-  getDocs() {
-    const result = []
-
-    this.keywordDB.forEach(el => {
-      result.push(el.data())
-    })
-    return result
-  },
-}
-
 async function getAmazonInfo() {
+  // ランダムなIDを生成（アクセスの判別で使う）
   const accessId = createNewAccessId()
+  // ログ情報のスロリームを開いている
+  await logsData.stream()
 
   const jpItemRef = await db.collection(`ItemsJP/${currentDate}/Items`)
+  const logsRef = await db.collection(`Logs/${currentDate}/Logs`)
 
   console.log('start')
 
@@ -242,8 +217,19 @@ async function getAmazonInfo() {
   // await clickByCss(driver, '#currentLanguage')
   // await clickByCss(driver, '#language_domains > div:nth-child(6) > span:nth-child(1)')
 
-  for (let i = 0; i <= keywords.length - 1; i++) {
-    for (let j = 0; j <= categories.length - 1; j++) {
+  let logsDataObj = logsData.getLatestDoc()
+
+  for (
+    let i = logsDataObj?.searchTextIndex ? logsDataObj.searchTextIndex : 0;
+    i <= keywords.length - 1;
+    i++
+  ) {
+    for (
+      let j = logsDataObj?.categoryNode ? logsDataObj.categoryNode : 0;
+      j <= categories.length - 1;
+      j++
+    ) {
+      if (logsDataObj?.pageNum === 2) continue
       await gotoUrl(
         driver,
         'https://keepa.com/#!finder/{"f":{"title":{"filterType":"text","type":"contains","filter":"' +
@@ -259,7 +245,7 @@ async function getAmazonInfo() {
         '#grid-tools-finder > div:nth-child(1) > span.tool__row.mdc-menu-anchor'
       )
       await clickByCss(driver, '#tool-row-menu > ul > li:nth-child(7)') // 7
-
+      let pageNnumber = 1
       while (!isComp) {
         await waitEl(driver, '.cssload-box-loading', 1000)
         await waitEl(
@@ -295,7 +281,6 @@ async function getAmazonInfo() {
 
             return arr
           }, [])
-          console.log(fieldTitle)
 
           lines.shift()
 
@@ -322,9 +307,12 @@ async function getAmazonInfo() {
               }
               return obj
             }, {})
-            await jpItemRef
-              .doc(recordData.asin)
-              .set({ ...recordData, ...{ created_at: new Date(), accessId } })
+
+            if (getCondition(recordData)) {
+              await jpItemRef
+                .doc(recordData.asin)
+                .set({ ...recordData, ...{ created_at: new Date(), accessId } })
+            }
           }
         })
 
@@ -338,7 +326,17 @@ async function getAmazonInfo() {
           driver,
           '#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > span:nth-child(3)'
         )
+        const logInfo = {
+          created_at: new Date(),
+          pageNum: pageNnumber,
+          categoryNode: j,
+          searchText: keywords[i],
+          searchTextIndex: i,
+          accessId,
+        }
+        await logsRef.doc().set(logInfos)
         if (total !== current) {
+          pageNnumber += 1
           clickByCss(
             driver,
             '#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > div:nth-child(5) > button'
