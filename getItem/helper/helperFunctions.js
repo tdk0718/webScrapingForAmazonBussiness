@@ -5,6 +5,13 @@ const is_windows = process.platform === 'win32'
 const is_mac = process.platform === 'darwin'
 const is_linux = process.platform === 'linux'
 import { sort } from 'fast-sort'
+const getCondition = obj => {
+  if (obj?.Reviews < 4) return false
+  if (!obj?.RankingDrop30) return false
+  if (obj?.RankingDrop30 < 1) return false
+  return true
+}
+
 export const fileRead = (path, cellName, jpItemRef) => {
   return new Promise(async (resolve, reject) => {
     const fsRes = await fs.readFile(path, 'utf-8', async (err, data) => {

@@ -118,6 +118,15 @@ var import_fast_sort = __toModule(require("fast-sort"));
 var is_windows = process.platform === "win32";
 var is_mac = process.platform === "darwin";
 var is_linux = process.platform === "linux";
+var getCondition = (obj) => {
+  if ((obj == null ? void 0 : obj.Reviews) < 4)
+    return false;
+  if (!(obj == null ? void 0 : obj.RankingDrop30))
+    return false;
+  if ((obj == null ? void 0 : obj.RankingDrop30) < 1)
+    return false;
+  return true;
+};
 var fileRead = (path, cellName2, jpItemRef) => {
   return new Promise(async (resolve, reject) => {
     const fsRes2 = await import_fs.default.readFile(path, "utf-8", async (err, data) => {
@@ -341,7 +350,7 @@ async function getAmazonInfo() {
       await gotoUrl(driver, 'https://keepa.com/#!finder/{"f":{"title":{"filterType":"text","type":"contains","filter":"' + keywords[i] + '"},"SALES_deltaPercent90":{"filterType":"number","type":"greaterThanOrEqual","filter":1,"filterTo":null},"COUNT_NEW_current":{"filterType":"number","type":"greaterThanOrEqual","filter":1,"filterTo":null},"rootCategory":{"filterType":"singleChoice","filter":"' + categories[j] + '","type":"equals"}},"s":[{"colId":"SALES_current","sort":"asc"}],"t":"g"}');
       let isComp = false;
       await clickByCss(driver, "#grid-tools-finder > div:nth-child(1) > span.tool__row.mdc-menu-anchor");
-      await clickByCss(driver, "#tool-row-menu > ul > li:nth-child(1)");
+      await clickByCss(driver, "#tool-row-menu > ul > li:nth-child(7)");
       let pageNnumber = 1;
       while (!isComp) {
         await waitEl(driver, ".cssload-box-loading", 1e5);
