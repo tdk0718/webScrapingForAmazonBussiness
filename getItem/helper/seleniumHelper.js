@@ -101,10 +101,12 @@ export function typeTextByCss(driver, css, text, timeout = 100000) {
   return new Promise(async (resolve, reject) => {
     try {
       await driver.wait(until.elementLocated(By.css(css)), timeout)
-      await driver.findElement(By.css(css)).click()
+
       await driver.findElement(By.css(css)).sendKeys(text)
+      resolve()
     } catch (e) {
       console.log(e)
+      resolve()
     }
   })
 }

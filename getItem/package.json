@@ -5,7 +5,8 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node esbuild.js && node dist/index.js"
+    "dev": "node esbuild.js && node dist/index.js",
+    "devtest": "node esbuildTest.js && node dist/indexTest.js"
   },
   "author": "tdk0718 <t.matsushita0718@gmail.com>",
   "license": "ISC",
@@ -13,6 +14,7 @@
     "core-js": "^3.14.0"
   },
   "dependencies": {
+    "exec-sh": "^0.4.0",
     "fs": "*",
     "sort-anything": "^1.0.1"
   }

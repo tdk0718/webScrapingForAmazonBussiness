@@ -2,11 +2,7 @@ import { promisify } from 'util'
 import webdriver from 'selenium-webdriver'
 
 const { Builder, By, until } = webdriver
-import Firebase from 'firebase/app'
-import 'firebase/firestore'
-import 'firebase/storage'
-import 'firebase/auth'
-import 'firebase/functions'
+
 import { exit } from 'process'
 // import { itemsData } from './src/db/modules/item'
 // import { getDriver } from './src/helper/seleniumHelper'
@@ -16,6 +12,8 @@ import { getUSDoler } from './helper/getUSDoler'
 import { keepaLogin } from './helper/keepaLogin'
 import { sort } from 'fast-sort'
 import fs from 'fs'
+
+import { fileRead, listFiles } from './helper/helperFunctions'
 
 const is_windows = process.platform === 'win32'
 const is_mac = process.platform === 'darwin'
@@ -33,8 +31,11 @@ import {
   getTextByXpath,
 } from './helper/seleniumHelper'
 import { keywords, categories, cellName } from './type/defaultData'
-import { resolve } from 'path'
-
+import Firebase from 'firebase/app'
+import 'firebase/firestore'
+import 'firebase/storage'
+import 'firebase/auth'
+import 'firebase/functions'
 const app = Firebase.initializeApp({
   apiKey: 'AIzaSyCj9Vxn7bQCy80iwxR8fB3HA9iGgySUrBI',
   authDomain: 'webscrapingforbussiness.firebaseapp.com',
@@ -95,52 +96,6 @@ const logsData = {
       searchTextIndex: maxSearchIndex,
     }
   },
-}
-
-/**
- * 指定したディレクトリ配下のファイルを再帰的にリストアップする
- * @param {string} dirPath 対象ディレクトリのフルパス
- * @return {Array<string>} ファイルのフルパス
- */
-const listFiles = dirPath => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      let reDirPath = is_windows ? dirPath.replace(/¥/g, '\\') : dirPath
-
-      const files = []
-      const paths = fs.readdirSync(reDirPath)
-
-      for (let name of paths) {
-        try {
-          if (name.indexOf('Product_Finder') !== -1) {
-            const path = is_windows ? `${reDirPath}¥${name}` : `${reDirPath}/${name}`
-
-            const stat = fs.statSync(path.replace(/¥/g, '\\'))
-            const { ctime } = stat
-            switch (true) {
-              case stat.isFile():
-                const sortNum = new Date(ctime)
-                files.push({ path: path.replace(/¥/g, '\\'), sortNum: sortNum.getTime() })
-                break
-
-              case stat.isDirectory():
-                break
-
-              default:
-            }
-          }
-        } catch (err) {
-          console.error('error:', err.message)
-        }
-      }
-
-      const res = sort(files).desc(e => e.sortNum)
-
-      resolve(res[0])
-    } catch (e) {
-      reject(new Error(e))
-    }
-  })
 }
 
 //TODO 新しいランダムIDを生成する関数
@@ -239,7 +194,7 @@ async function getAmazonInfo() {
         driver,
         '#grid-tools-finder > div:nth-child(1) > span.tool__row.mdc-menu-anchor'
       )
-      await clickByCss(driver, '#tool-row-menu > ul > li:nth-child(7)') // 7
+      await clickByCss(driver, '#tool-row-menu > ul > li:nth-child(1)') // 7
       let pageNnumber = 1
       while (!isComp) {
         await waitEl(driver, '.cssload-box-loading', 100000)
@@ -255,66 +210,7 @@ async function getAmazonInfo() {
         const df = is_mac ? '/Users/tadakimatsushita/Downloads' : 'C:¥Users¥Administrator¥Downloads'
         const res = await listFiles(df)
 
-        const fsRes = await fs.readFile(res.path, 'utf-8', async (err, data) => {
-          return new Promise(async (resolve, reject) => {
-            if (err) reject(err)
-            const lines = data.split('\n')
-
-            const fieldTitle = lines[0].split('","').reduce((arr, element) => {
-              const cellInfo = cellName.find(e => {
-                return element.replace(/"/g, '') === e.text
-              })
-
-              if (cellInfo) {
-                return [
-                  ...arr,
-                  {
-                    index: lines[0].split('","').findIndex(el => el === element),
-                    field: cellInfo.field,
-                  },
-                ]
-              }
-
-              return arr
-            }, [])
-
-            lines.shift()
-
-            for (let t = 0; t < lines.length; t++) {
-              const eachLine = lines[t]
-              const recordData = eachLine.split('","').reduce((obj, val, index) => {
-                const getField = fieldTitle.find(title => title.index === index)
-                if (getField) {
-                  const getFieldInfo = cellName.find(f => f.field === getField.field)
-
-                  let revisedVal = val.replace(/"/g, '')
-
-                  if (getFieldInfo?.omit) {
-                    revisedVal = getFieldInfo.omit.reduce((st, el) => {
-                      return st.replace(el, '')
-                    }, revisedVal)
-                  }
-
-                  if (getFieldInfo?.type === 'Number') {
-                    revisedVal = Number(revisedVal)
-                  }
-
-                  return { ...obj, ...{ [`${getField.field}`]: revisedVal } }
-                }
-                return obj
-              }, {})
-
-              if (getCondition(recordData)) {
-                console.log(t)
-                await jpItemRef
-                  .doc(recordData.asin)
-                  .set({ ...recordData, ...{ created_at: new Date(), accessId } })
-              }
-            }
-            resolve('ok')
-            fs.unlinkSync(res.path)
-          })
-        })
+        await fileRead(res.path, cellName, jpItemRef)
 
         console.log(fsRes)
 

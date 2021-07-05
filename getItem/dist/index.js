@@ -34,11 +34,6 @@ var __toModule = (module2) => {
 // app.js
 var import_util = __toModule(require("util"));
 var import_selenium_webdriver6 = __toModule(require("selenium-webdriver"));
-var import_app = __toModule(require("firebase/app"));
-var import_firestore = __toModule(require("firebase/firestore"));
-var import_storage = __toModule(require("firebase/storage"));
-var import_auth = __toModule(require("firebase/auth"));
-var import_functions = __toModule(require("firebase/functions"));
 var import_process = __toModule(require("process"));
 
 // keepaInfo.js
@@ -54,7 +49,7 @@ var import_selenium_webdriver3 = __toModule(require("selenium-webdriver"));
 var import_selenium_webdriver4 = __toModule(require("selenium-webdriver"));
 var { Builder, By, until } = import_selenium_webdriver4.default;
 function keepaLogin(driver) {
-  return new Promise(async (resolve2, reject) => {
+  return new Promise(async (resolve, reject) => {
     try {
       await driver.get("https://keepa.com/#");
       await driver.wait(until.elementLocated(By.id("panelUserRegisterLogin")), 1e4);
@@ -62,7 +57,7 @@ function keepaLogin(driver) {
       await driver.findElement(By.id("username")).sendKeys("t.matsushita0718@gmail.com");
       await driver.findElement(By.id("password")).sendKeys("tadaki4281");
       await driver.findElement(By.id("submitLogin")).click();
-      resolve2("ok");
+      resolve("ok");
     } catch (e) {
       reject(e);
     }
@@ -70,69 +65,11 @@ function keepaLogin(driver) {
 }
 
 // app.js
-var import_fast_sort = __toModule(require("fast-sort"));
-var import_fs = __toModule(require("fs"));
+var import_fast_sort2 = __toModule(require("fast-sort"));
+var import_fs2 = __toModule(require("fs"));
 
-// helper/seleniumHelper.js
-var import_selenium_webdriver5 = __toModule(require("selenium-webdriver"));
-var { Builder: Builder2, By: By2, until: until2 } = import_selenium_webdriver5.default;
-function createDriver(capabilities) {
-  return new Promise(async (resolve2, reject) => {
-    try {
-      const driver = await new Builder2().withCapabilities(capabilities).build();
-      resolve2(driver);
-    } catch (e) {
-      console.log(e);
-    }
-  });
-}
-function getTextByCss(driver, css, timeout = 1e5) {
-  return new Promise(async (resolve2, reject) => {
-    try {
-      await driver.wait(until2.elementLocated(By2.css(css)), timeout);
-      const result = await driver.findElement(By2.css(css)).getText();
-      resolve2(result);
-    } catch (e) {
-      console.log(e);
-      resolve2("");
-    }
-  });
-}
-function clickByCss(driver, css, timeout = 1e5) {
-  return new Promise(async (resolve2, reject) => {
-    try {
-      await driver.wait(until2.elementLocated(By2.css(css)), timeout);
-      await driver.findElement(By2.css(css)).click();
-      resolve2();
-    } catch (e) {
-      console.log(e);
-    }
-  });
-}
-function gotoUrl(driver, url) {
-  return new Promise(async (resolve2, reject) => {
-    try {
-      let currentUrl = await driver.getCurrentUrl();
-      while (decodeURI(currentUrl) !== decodeURI(url)) {
-        await driver.get(url);
-        currentUrl = await driver.getCurrentUrl();
-      }
-      resolve2();
-    } catch (e) {
-      console.log(e);
-    }
-  });
-}
-function waitEl(driver, css, seconds = 1e5) {
-  return new Promise(async (resolve2, reject) => {
-    try {
-      await driver.wait(until2.elementLocated(By2.css(css)), seconds);
-      resolve2("ok");
-    } catch (e) {
-      console.log(e);
-    }
-  });
-}
+// helper/helperFunctions.js
+var import_fs = __toModule(require("fs"));
 
 // type/defaultData.js
 var categories = [
@@ -176,65 +113,64 @@ var cellName = [
   { text: "Item: Dimension (cm\xB3)", field: "ItemDimension", type: "String" }
 ];
 
-// app.js
-var import_path = __toModule(require("path"));
+// helper/helperFunctions.js
+var import_fast_sort = __toModule(require("fast-sort"));
 var is_windows = process.platform === "win32";
 var is_mac = process.platform === "darwin";
 var is_linux = process.platform === "linux";
-var app = import_app.default.initializeApp({
-  apiKey: "AIzaSyCj9Vxn7bQCy80iwxR8fB3HA9iGgySUrBI",
-  authDomain: "webscrapingforbussiness.firebaseapp.com",
-  projectId: "webscrapingforbussiness",
-  storageBucket: "webscrapingforbussiness.appspot.com",
-  messagingSenderId: "843243345021",
-  appId: "1:843243345021:web:908bb33aaaeec9c59dcd14"
-});
-var db = import_app.default.firestore(app);
-var current = new Date();
-var currentDate = current.getFullYear() + "-" + (current.getMonth() + 1);
-var getCondition = (obj) => {
-  if ((obj == null ? void 0 : obj.Reviews) < 4)
-    return false;
-  if (!(obj == null ? void 0 : obj.RankingDrop30))
-    return false;
-  if ((obj == null ? void 0 : obj.RankingDrop30) < 1)
-    return false;
-  return true;
-};
-var logsData = {
-  logDB: [],
-  async stream() {
-    await db.collection("Logs").doc(currentDate).set({ created_at: current });
-    await db.collection(`Logs/${currentDate}/Logs`).onSnapshot((res) => {
-      this.logDB = res;
+var fileRead = (path, cellName2, jpItemRef) => {
+  return new Promise(async (resolve, reject) => {
+    const fsRes2 = await import_fs.default.readFile(path, "utf-8", async (err, data) => {
+      if (err)
+        reject(err);
+      const lines = data.split("\n");
+      const fieldTitle = lines[0].split('","').reduce((arr, element) => {
+        const cellInfo = cellName2.find((e) => {
+          return element.replace(/"/g, "") === e.text;
+        });
+        if (cellInfo) {
+          return [
+            ...arr,
+            {
+              index: lines[0].split('","').findIndex((el) => el === element),
+              field: cellInfo.field
+            }
+          ];
+        }
+        return arr;
+      }, []);
+      lines.shift();
+      for (let t = 0; t < lines.length; t++) {
+        const eachLine = lines[t];
+        const recordData = eachLine.split('","').reduce((obj, val, index) => {
+          const getField = fieldTitle.find((title) => title.index === index);
+          if (getField) {
+            const getFieldInfo = cellName2.find((f) => f.field === getField.field);
+            let revisedVal = val.replace(/"/g, "");
+            if (getFieldInfo == null ? void 0 : getFieldInfo.omit) {
+              revisedVal = getFieldInfo.omit.reduce((st, el) => {
+                return st.replace(el, "");
+              }, revisedVal);
+            }
+            if ((getFieldInfo == null ? void 0 : getFieldInfo.type) === "Number") {
+              revisedVal = Number(revisedVal);
+            }
+            return __spreadValues(__spreadValues({}, obj), { [`${getField.field}`]: revisedVal });
+          }
+          return obj;
+        }, {});
+        if (getCondition(recordData)) {
+          console.log(t);
+          await jpItemRef.doc(recordData.asin).set(__spreadValues(__spreadValues({}, recordData), { created_at: new Date(), accessId }));
+        }
+      }
+      resolve("ok");
+      import_fs.default.unlinkSync(path);
     });
-  },
-  async getDocs() {
-    const result = [];
-    this.logDB.forEach((el) => {
-      result.push(el.data());
-    });
-    return result;
-  },
-  getLatestDoc() {
-    let result = [];
-    this.logDB.forEach((el) => {
-      result.push(el.data());
-    });
-    if (!result.length)
-      return [];
-    const maxSearchIndex = (0, import_fast_sort.sort)(result).desc((r) => r.searchTextIndex)[0].searchTextIndex;
-    const maxNodeIndex = (0, import_fast_sort.sort)(result.filter((e) => e.searchTextIndex === maxSearchIndex)).desc((r) => r.nodeIndex)[0].nodeIndex;
-    const maxPageNum = (0, import_fast_sort.sort)(result.filter((e) => e.searchTextIndex === maxSearchIndex && e.nodeIndex === maxNodeIndex)).desc((r) => r.pageNum)[0].pageNum;
-    return {
-      nodeIndex: maxNodeIndex,
-      pageNum: maxPageNum,
-      searchTextIndex: maxSearchIndex
-    };
-  }
+  });
 };
 var listFiles = (dirPath) => {
-  return new Promise(async (resolve2, reject) => {
+  return new Promise(async (resolve, reject) => {
     try {
       let reDirPath = is_windows ? dirPath.replace(/¥/g, "\\") : dirPath;
       const files = [];
@@ -260,11 +196,125 @@ var listFiles = (dirPath) => {
         }
       }
       const res = (0, import_fast_sort.sort)(files).desc((e) => e.sortNum);
-      resolve2(res[0]);
+      resolve(res[0]);
     } catch (e) {
       reject(new Error(e));
     }
   });
+};
+
+// helper/seleniumHelper.js
+var import_selenium_webdriver5 = __toModule(require("selenium-webdriver"));
+var { Builder: Builder2, By: By2, until: until2 } = import_selenium_webdriver5.default;
+function createDriver(capabilities) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const driver = await new Builder2().withCapabilities(capabilities).build();
+      resolve(driver);
+    } catch (e) {
+      console.log(e);
+    }
+  });
+}
+function getTextByCss(driver, css, timeout = 1e5) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      await driver.wait(until2.elementLocated(By2.css(css)), timeout);
+      const result = await driver.findElement(By2.css(css)).getText();
+      resolve(result);
+    } catch (e) {
+      console.log(e);
+      resolve("");
+    }
+  });
+}
+function clickByCss(driver, css, timeout = 1e5) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      await driver.wait(until2.elementLocated(By2.css(css)), timeout);
+      await driver.findElement(By2.css(css)).click();
+      resolve();
+    } catch (e) {
+      console.log(e);
+    }
+  });
+}
+function gotoUrl(driver, url) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let currentUrl = await driver.getCurrentUrl();
+      while (decodeURI(currentUrl) !== decodeURI(url)) {
+        await driver.get(url);
+        currentUrl = await driver.getCurrentUrl();
+      }
+      resolve();
+    } catch (e) {
+      console.log(e);
+    }
+  });
+}
+function waitEl(driver, css, seconds = 1e5) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      await driver.wait(until2.elementLocated(By2.css(css)), seconds);
+      resolve("ok");
+    } catch (e) {
+      console.log(e);
+    }
+  });
+}
+
+// app.js
+var import_app = __toModule(require("firebase/app"));
+var import_firestore = __toModule(require("firebase/firestore"));
+var import_storage = __toModule(require("firebase/storage"));
+var import_auth = __toModule(require("firebase/auth"));
+var import_functions = __toModule(require("firebase/functions"));
+var is_windows2 = process.platform === "win32";
+var is_mac2 = process.platform === "darwin";
+var is_linux2 = process.platform === "linux";
+var app = import_app.default.initializeApp({
+  apiKey: "AIzaSyCj9Vxn7bQCy80iwxR8fB3HA9iGgySUrBI",
+  authDomain: "webscrapingforbussiness.firebaseapp.com",
+  projectId: "webscrapingforbussiness",
+  storageBucket: "webscrapingforbussiness.appspot.com",
+  messagingSenderId: "843243345021",
+  appId: "1:843243345021:web:908bb33aaaeec9c59dcd14"
+});
+var db = import_app.default.firestore(app);
+var current = new Date();
+var currentDate = current.getFullYear() + "-" + (current.getMonth() + 1);
+var logsData = {
+  logDB: [],
+  async stream() {
+    await db.collection("Logs").doc(currentDate).set({ created_at: current });
+    await db.collection(`Logs/${currentDate}/Logs`).onSnapshot((res) => {
+      this.logDB = res;
+    });
+  },
+  async getDocs() {
+    const result = [];
+    this.logDB.forEach((el) => {
+      result.push(el.data());
+    });
+    return result;
+  },
+  getLatestDoc() {
+    let result = [];
+    this.logDB.forEach((el) => {
+      result.push(el.data());
+    });
+    if (!result.length)
+      return [];
+    const maxSearchIndex = (0, import_fast_sort2.sort)(result).desc((r) => r.searchTextIndex)[0].searchTextIndex;
+    const maxNodeIndex = (0, import_fast_sort2.sort)(result.filter((e) => e.searchTextIndex === maxSearchIndex)).desc((r) => r.nodeIndex)[0].nodeIndex;
+    const maxPageNum = (0, import_fast_sort2.sort)(result.filter((e) => e.searchTextIndex === maxSearchIndex && e.nodeIndex === maxNodeIndex)).desc((r) => r.pageNum)[0].pageNum;
+    return {
+      nodeIndex: maxNodeIndex,
+      pageNum: maxPageNum,
+      searchTextIndex: maxSearchIndex
+    };
+  }
 };
 function createNewAccessId() {
   const LENGTH = 20;
@@ -276,7 +326,7 @@ function createNewAccessId() {
   return NewId;
 }
 async function getAmazonInfo() {
-  const accessId = createNewAccessId();
+  const accessId2 = createNewAccessId();
   await logsData.stream();
   const jpItemRef = await db.collection(`ItemsJP/${currentDate}/Items`);
   const logsRef = await db.collection(`Logs/${currentDate}/Logs`);
@@ -288,84 +338,36 @@ async function getAmazonInfo() {
   let logsDataObj = logsData.getLatestDoc();
   for (let i = (logsDataObj == null ? void 0 : logsDataObj.searchTextIndex) ? logsDataObj.searchTextIndex : 0; i <= keywords.length - 1; i++) {
     for (let j = (logsDataObj == null ? void 0 : logsDataObj.categoryNode) ? logsDataObj.categoryNode : 0; j <= categories.length - 1; j++) {
-      if ((logsDataObj == null ? void 0 : logsDataObj.pageNum) === 2)
-        continue;
       await gotoUrl(driver, 'https://keepa.com/#!finder/{"f":{"title":{"filterType":"text","type":"contains","filter":"' + keywords[i] + '"},"SALES_deltaPercent90":{"filterType":"number","type":"greaterThanOrEqual","filter":1,"filterTo":null},"COUNT_NEW_current":{"filterType":"number","type":"greaterThanOrEqual","filter":1,"filterTo":null},"rootCategory":{"filterType":"singleChoice","filter":"' + categories[j] + '","type":"equals"}},"s":[{"colId":"SALES_current","sort":"asc"}],"t":"g"}');
       let isComp = false;
       await clickByCss(driver, "#grid-tools-finder > div:nth-child(1) > span.tool__row.mdc-menu-anchor");
-      await clickByCss(driver, "#tool-row-menu > ul > li:nth-child(2)");
+      await clickByCss(driver, "#tool-row-menu > ul > li:nth-child(1)");
       let pageNnumber = 1;
       while (!isComp) {
         await waitEl(driver, ".cssload-box-loading", 1e5);
         await waitEl(driver, "#grid-asin-finder > div > div.ag-root-wrapper-body.ag-layout-normal > div.ag-root.ag-unselectable.ag-layout-normal > div.ag-body-viewport.ag-layout-normal.ag-row-no-animation > div.ag-center-cols-clipper > div > div > div:nth-child(1) > div:nth-child(3) > a > span", 1e7);
         await clickByCss(driver, "#grid-tools-finder > div:nth-child(1) > span.tool__export > span");
         await clickByCss(driver, "#exportSubmit");
-        const df = is_mac ? "/Users/tadakimatsushita/Downloads" : "C:\xA5Users\xA5Administrator\xA5Downloads";
+        const df = is_mac2 ? "/Users/tadakimatsushita/Downloads" : "C:\xA5Users\xA5Administrator\xA5Downloads";
         const res = await listFiles(df);
-        const fsRes = await import_fs.default.readFile(res.path, "utf-8", async (err, data) => {
-          return new Promise(async (resolve2, reject) => {
-            if (err)
-              reject(err);
-            const lines = data.split("\n");
-            const fieldTitle = lines[0].split('","').reduce((arr, element) => {
-              const cellInfo = cellName.find((e) => {
-                return element.replace(/"/g, "") === e.text;
-              });
-              if (cellInfo) {
-                return [
-                  ...arr,
-                  {
-                    index: lines[0].split('","').findIndex((el) => el === element),
-                    field: cellInfo.field
-                  }
-                ];
-              }
-              return arr;
-            }, []);
-            lines.shift();
-            for (let t = 0; t < lines.length; t++) {
-              const eachLine = lines[t];
-              const recordData = eachLine.split('","').reduce((obj, val, index) => {
-                const getField = fieldTitle.find((title) => title.index === index);
-                if (getField) {
-                  const getFieldInfo = cellName.find((f) => f.field === getField.field);
-                  let revisedVal = val.replace(/"/g, "");
-                  if (getFieldInfo == null ? void 0 : getFieldInfo.omit) {
-                    revisedVal = getFieldInfo.omit.reduce((st, el) => {
-                      return st.replace(el, "");
-                    }, revisedVal);
-                  }
-                  if ((getFieldInfo == null ? void 0 : getFieldInfo.type) === "Number") {
-                    revisedVal = Number(revisedVal);
-                  }
-                  return __spreadValues(__spreadValues({}, obj), { [`${getField.field}`]: revisedVal });
-                }
-                return obj;
-              }, {});
-              if (getCondition(recordData)) {
-                console.log(t);
-                await jpItemRef.doc(recordData.asin).set(__spreadValues(__spreadValues({}, recordData), { created_at: new Date(), accessId }));
-              }
-            }
-            resolve2("ok");
-            import_fs.default.unlinkSync(res.path);
-          });
-        });
+        await fileRead(res.path, cellName, jpItemRef);
         console.log(fsRes);
-        const total = await getTextByCss(driver, "#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > span:nth-child(4)");
-        const current2 = await getTextByCss(driver, "#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > span:nth-child(3)");
         const logInfo = {
           created_at: new Date(),
           pageNum: pageNnumber,
           categoryNode: j,
           searchText: keywords[i],
           searchTextIndex: i,
-          accessId
+          accessId: accessId2
         };
         await logsRef.doc().set(logInfo);
+        const total = await getTextByCss(driver, "#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > span:nth-child(4)");
+        const current2 = await getTextByCss(driver, "#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > span:nth-child(3)");
         if (total !== current2) {
           pageNnumber += 1;
           clickByCss(driver, "#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > div:nth-child(5) > button");
+        } else {
+          continue;
         }
       }
     }
