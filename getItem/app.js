@@ -212,7 +212,7 @@ async function getAmazonInfo() {
 
         await fileRead(res.path, cellName, jpItemRef, accessId)
 
-        console.log(fsRes)
+        // console.log(fsRes)
 
         const logInfo = {
           created_at: new Date(),
