@@ -12,7 +12,7 @@ const getCondition = obj => {
   return true
 }
 
-export const fileRead = (path, cellName, jpItemRef) => {
+export const fileRead = (path, cellName, jpItemRef, accessId) => {
   return new Promise(async (resolve, reject) => {
     const fsRes = await fs.readFile(path, 'utf-8', async (err, data) => {
       if (err) reject(err)

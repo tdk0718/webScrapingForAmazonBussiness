@@ -210,7 +210,7 @@ async function getAmazonInfo() {
         const df = is_mac ? '/Users/tadakimatsushita/Downloads' : 'C:¥Users¥Administrator¥Downloads'
         const res = await listFiles(df)
 
-        await fileRead(res.path, cellName, jpItemRef)
+        await fileRead(res.path, cellName, jpItemRef, accessId)
 
         console.log(fsRes)
 
