@@ -310,7 +310,7 @@ async function getUSInfo(driver, datas) {
           }
         }
         await clickByCss(driver2, "#importSubmit");
-        await clickByCss(driver2, ".relativeAlignCenter #shareChartOverlay-close4");
+        await simpleClickByCss(driver2, ".relativeAlignCenter #shareChartOverlay-close4");
         await simpleClickByCss(driver2, "#grid-tools-viewer > div:nth-child(1) > span.tool__export > span", 9e3);
         await simpleClickByCss(driver2, "#exportSubmit");
         const df = is_mac2 ? "/Users/tadakimatsushita/Downloads" : "C:\xA5Users\xA5Administrator\xA5Downloads";

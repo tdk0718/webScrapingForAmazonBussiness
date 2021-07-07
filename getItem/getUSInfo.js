@@ -117,7 +117,7 @@ export async function getUSInfo(driver, datas) {
           }
         }
         await clickByCss(driver, '#importSubmit')
-        await clickByCss(driver, '.relativeAlignCenter #shareChartOverlay-close4')
+        await simpleClickByCss(driver, '.relativeAlignCenter #shareChartOverlay-close4')
         await simpleClickByCss(
           driver,
           '#grid-tools-viewer > div:nth-child(1) > span.tool__export > span',
