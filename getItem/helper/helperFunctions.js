@@ -189,38 +189,40 @@ export const USfileRead = (path, cellName, ItemRef) => {
 export const USlistFiles = dirPath => {
   return new Promise(async (resolve, reject) => {
     try {
-      let reDirPath = is_windows ? dirPath.replace(/¥/g, '\\') : dirPath
+      let res = [{ path: '.crdownload' }]
+      while (res[0].path.indexOf('.crdownload') !== -1) {
+        let reDirPath = is_windows ? dirPath.replace(/¥/g, '\\') : dirPath
 
-      const files = []
-      const paths = fs.readdirSync(reDirPath)
+        const files = []
+        const paths = fs.readdirSync(reDirPath)
 
-      for (let name of paths) {
-        try {
-          if (name.indexOf('Product_Viewer') !== -1) {
-            const path = is_windows ? `${reDirPath}¥${name}` : `${reDirPath}/${name}`
+        for (let name of paths) {
+          try {
+            if (name.indexOf('Product_Viewer') !== -1) {
+              const path = is_windows ? `${reDirPath}¥${name}` : `${reDirPath}/${name}`
 
-            const stat = fs.statSync(path.replace(/¥/g, '\\'))
-            const { ctime } = stat
-            switch (true) {
-              case stat.isFile():
-                const sortNum = new Date(ctime)
-                files.push({ path: path.replace(/¥/g, '\\'), sortNum: sortNum.getTime() })
-                break
+              const stat = fs.statSync(path.replace(/¥/g, '\\'))
+              const { ctime } = stat
+              switch (true) {
+                case stat.isFile():
+                  const sortNum = new Date(ctime)
+                  files.push({ path: path.replace(/¥/g, '\\'), sortNum: sortNum.getTime() })
+                  break
 
-              case stat.isDirectory():
-                break
+                case stat.isDirectory():
+                  break
 
-              default:
+                default:
+              }
             }
+          } catch (err) {
+            console.error('error:', err.message)
           }
-        } catch (err) {
-          console.error('error:', err.message)
         }
+
+        res = sort(files).desc(e => e.sortNum)
+        console.log(res)
       }
-
-      const res = sort(files).desc(e => e.sortNum)
-      console.log(res)
-
       resolve(res[0])
     } catch (e) {
       reject(new Error(e))
