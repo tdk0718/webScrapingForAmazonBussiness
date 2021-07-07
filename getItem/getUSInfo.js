@@ -12,7 +12,7 @@ import { keepaLogin } from './helper/keepaLogin'
 
 import { keywords, categories, cellNameUS } from './type/defaultData'
 
-import { fileRead, listFiles } from './helper/helperFunctions'
+import { USfileRead, listFiles, USlistFiles } from './helper/helperFunctions'
 
 import {
   getTextByCss,
@@ -24,6 +24,7 @@ import {
   gotoUrl,
   typeTextByCss,
   getTextByXpath,
+  simpleClickByCss,
 } from './helper/seleniumHelper'
 
 const is_windows = process.platform === 'win32'
@@ -99,30 +100,35 @@ export async function getUSInfo(driver, datas) {
       const capabilities = webdriver.Capabilities.chrome()
       capabilities.set('chromeOptions', {})
 
-      const jpItemRef = await db.collection(`ItemsJP/${currentDate}/Items`)
+      const ItemRef = await db.collection(`ItemsJP/${currentDate}/Items`)
 
       const driver = await createDriver(capabilities)
       await driver.get('https://keepa.com/#')
       keepaLogin(driver)
       await itemsData.stream()
-      await gotoUrl(driver, 'https://keepa.com/#!viewer')
+
       while (itemsData.getDocs(99).length) {
+        await gotoUrl(driver, 'https://keepa.com/#!viewer')
         let text = ''
         for (let i = 0; i <= itemsData.getDocs(99).length; i++) {
           if (itemsData.getDocs(99)[i]?.asin) {
             await typeTextByCss(driver, '#importInputAsin', itemsData.getDocs(99)[i]?.asin + ' ')
-            console.log(itemsData.getDocs(9999)[i]?.asin)
+            console.log(itemsData.getDocs(99)[i]?.asin)
           }
         }
         await clickByCss(driver, '#importSubmit')
-        await clickByCss(driver, '#shareChartOverlay-close4')
-        await clickByCss(driver, '#grid-tools-viewer > div:nth-child(1) > span.tool__export > span')
-        await clickByCss(driver, '#exportSubmit')
+        await clickByCss(driver, '.relativeAlignCenter #shareChartOverlay-close4')
+        await simpleClickByCss(
+          driver,
+          '#grid-tools-viewer > div:nth-child(1) > span.tool__export > span',
+          9000
+        )
+        await simpleClickByCss(driver, '#exportSubmit')
 
         const df = is_mac ? '/Users/tadakimatsushita/Downloads' : 'C:¥Users¥Administrator¥Downloads'
-        const res = await listFiles(df)
+        const res = await USlistFiles(df)
 
-        await fileRead(res.path, cellNameUS, jpItemRef)
+        await USfileRead(res.path, cellNameUS, ItemRef)
       }
     } catch (e) {
       reject(e)

@@ -49,7 +49,7 @@ var import_selenium_webdriver3 = __toModule(require("selenium-webdriver"));
 var import_selenium_webdriver4 = __toModule(require("selenium-webdriver"));
 var { Builder, By, until } = import_selenium_webdriver4.default;
 function keepaLogin(driver) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve2, reject) => {
     try {
       await driver.get("https://keepa.com/#");
       await driver.wait(until.elementLocated(By.id("panelUserRegisterLogin")), 1e4);
@@ -57,7 +57,7 @@ function keepaLogin(driver) {
       await driver.findElement(By.id("username")).sendKeys("t.matsushita0718@gmail.com");
       await driver.findElement(By.id("password")).sendKeys("tadaki4281");
       await driver.findElement(By.id("submitLogin")).click();
-      resolve("ok");
+      resolve2("ok");
     } catch (e) {
       reject(e);
     }
@@ -127,9 +127,9 @@ var getCondition = (obj) => {
     return false;
   return true;
 };
-var fileRead = (path, cellName2, jpItemRef) => {
-  return new Promise(async (resolve, reject) => {
-    const fsRes2 = await import_fs.default.readFile(path, "utf-8", async (err, data) => {
+var fileRead = (path, cellName2, jpItemRef, accessId) => {
+  return new Promise(async (resolve2, reject) => {
+    const fsRes = await import_fs.default.readFile(path, "utf-8", async (err, data) => {
       if (err)
         reject(err);
       const lines = data.split("\n");
@@ -173,13 +173,13 @@ var fileRead = (path, cellName2, jpItemRef) => {
           await jpItemRef.doc(recordData.asin).set(__spreadValues(__spreadValues({}, recordData), { created_at: new Date(), accessId }));
         }
       }
-      resolve("ok");
+      resolve2("ok");
       import_fs.default.unlinkSync(path);
     });
   });
 };
 var listFiles = (dirPath) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve2, reject) => {
     try {
       let reDirPath = is_windows ? dirPath.replace(/¥/g, "\\") : dirPath;
       const files = [];
@@ -205,7 +205,7 @@ var listFiles = (dirPath) => {
         }
       }
       const res = (0, import_fast_sort.sort)(files).desc((e) => e.sortNum);
-      resolve(res[0]);
+      resolve2(res[0]);
     } catch (e) {
       reject(new Error(e));
     }
@@ -216,57 +216,57 @@ var listFiles = (dirPath) => {
 var import_selenium_webdriver5 = __toModule(require("selenium-webdriver"));
 var { Builder: Builder2, By: By2, until: until2 } = import_selenium_webdriver5.default;
 function createDriver(capabilities) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve2, reject) => {
     try {
       const driver = await new Builder2().withCapabilities(capabilities).build();
-      resolve(driver);
+      resolve2(driver);
     } catch (e) {
       console.log(e);
     }
   });
 }
 function getTextByCss(driver, css, timeout = 1e5) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve2, reject) => {
     try {
       await driver.wait(until2.elementLocated(By2.css(css)), timeout);
       const result = await driver.findElement(By2.css(css)).getText();
-      resolve(result);
+      resolve2(result);
     } catch (e) {
       console.log(e);
-      resolve("");
+      resolve2("");
     }
   });
 }
 function clickByCss(driver, css, timeout = 1e5) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve2, reject) => {
     try {
       await driver.wait(until2.elementLocated(By2.css(css)), timeout);
       await driver.findElement(By2.css(css)).click();
-      resolve();
+      resolve2();
     } catch (e) {
       console.log(e);
     }
   });
 }
 function gotoUrl(driver, url) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve2, reject) => {
     try {
       let currentUrl = await driver.getCurrentUrl();
       while (decodeURI(currentUrl) !== decodeURI(url)) {
         await driver.get(url);
         currentUrl = await driver.getCurrentUrl();
       }
-      resolve();
+      resolve2();
     } catch (e) {
       console.log(e);
     }
   });
 }
 function waitEl(driver, css, seconds = 1e5) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve2, reject) => {
     try {
       await driver.wait(until2.elementLocated(By2.css(css)), seconds);
-      resolve("ok");
+      resolve2("ok");
     } catch (e) {
       console.log(e);
     }
@@ -279,6 +279,7 @@ var import_firestore = __toModule(require("firebase/firestore"));
 var import_storage = __toModule(require("firebase/storage"));
 var import_auth = __toModule(require("firebase/auth"));
 var import_functions = __toModule(require("firebase/functions"));
+var import_path = __toModule(require("path"));
 var is_windows2 = process.platform === "win32";
 var is_mac2 = process.platform === "darwin";
 var is_linux2 = process.platform === "linux";
@@ -335,7 +336,7 @@ function createNewAccessId() {
   return NewId;
 }
 async function getAmazonInfo() {
-  const accessId2 = createNewAccessId();
+  const accessId = createNewAccessId();
   await logsData.stream();
   const jpItemRef = await db.collection(`ItemsJP/${currentDate}/Items`);
   const logsRef = await db.collection(`Logs/${currentDate}/Logs`);
@@ -359,15 +360,14 @@ async function getAmazonInfo() {
         await clickByCss(driver, "#exportSubmit");
         const df = is_mac2 ? "/Users/tadakimatsushita/Downloads" : "C:\xA5Users\xA5Administrator\xA5Downloads";
         const res = await listFiles(df);
-        await fileRead(res.path, cellName, jpItemRef);
-        console.log(fsRes);
+        await fileRead(res.path, cellName, jpItemRef, accessId);
         const logInfo = {
           created_at: new Date(),
           pageNum: pageNnumber,
           categoryNode: j,
           searchText: keywords[i],
           searchTextIndex: i,
-          accessId: accessId2
+          accessId
         };
         await logsRef.doc().set(logInfo);
         const total = await getTextByCss(driver, "#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > span:nth-child(4)");
@@ -386,9 +386,12 @@ async function getAmazonInfo() {
   return;
 }
 (async () => {
-  try {
-    await getAmazonInfo();
-  } catch (e) {
-    console.log(e);
-  }
+  return new Promise(async (resolve2, reject) => {
+    try {
+      await getAmazonInfo();
+      resolve2();
+    } catch (e) {
+      reject(e);
+    }
+  });
 })();

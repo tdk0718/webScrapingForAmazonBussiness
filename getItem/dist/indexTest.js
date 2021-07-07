@@ -79,7 +79,7 @@ var import_fast_sort = __toModule(require("fast-sort"));
 var is_windows = process.platform === "win32";
 var is_mac = process.platform === "darwin";
 var is_linux = process.platform === "linux";
-var fileRead = (path, cellName, jpItemRef) => {
+var USfileRead = (path, cellName, ItemRef) => {
   return new Promise(async (resolve, reject) => {
     const fsRes = await import_fs.default.readFile(path, "utf-8", async (err, data) => {
       if (err)
@@ -120,9 +120,10 @@ var fileRead = (path, cellName, jpItemRef) => {
           }
           return obj;
         }, {});
-        if (getCondition(recordData)) {
-          console.log(t);
-          await jpItemRef.doc(recordData.asin).set(__spreadValues(__spreadValues({}, recordData), { created_at: new Date(), accessId }));
+        console.log(t);
+        try {
+          await ItemRef.doc(recordData.asin).update(__spreadValues(__spreadValues({}, recordData), { update_at: new Date() }));
+        } catch (e) {
         }
       }
       resolve("ok");
@@ -130,7 +131,7 @@ var fileRead = (path, cellName, jpItemRef) => {
     });
   });
 };
-var listFiles = (dirPath) => {
+var USlistFiles = (dirPath) => {
   return new Promise(async (resolve, reject) => {
     try {
       let reDirPath = is_windows ? dirPath.replace(/¥/g, "\\") : dirPath;
@@ -138,7 +139,7 @@ var listFiles = (dirPath) => {
       const paths = import_fs.default.readdirSync(reDirPath);
       for (let name of paths) {
         try {
-          if (name.indexOf("Product_Finder") !== -1) {
+          if (name.indexOf("Product_Viewer") !== -1) {
             const path = is_windows ? `${reDirPath}\xA5${name}` : `${reDirPath}/${name}`;
             const stat = import_fs.default.statSync(path.replace(/¥/g, "\\"));
             const { ctime } = stat;
@@ -157,6 +158,7 @@ var listFiles = (dirPath) => {
         }
       }
       const res = (0, import_fast_sort.sort)(files).desc((e) => e.sortNum);
+      console.log(res);
       resolve(res[0]);
     } catch (e) {
       reject(new Error(e));
@@ -181,10 +183,25 @@ function clickByCss(driver, css, timeout = 1e5) {
   return new Promise(async (resolve, reject) => {
     try {
       await driver.wait(until2.elementLocated(By2.css(css)), timeout);
-      await driver.findElement(By2.css(css)).click();
+      const actions = driver.actions();
+      const element = await driver.findElement(By2.css(css));
+      await actions.move({ origin: element }).click().perform();
       resolve();
     } catch (e) {
       console.log(e);
+      resolve(e);
+    }
+  });
+}
+function simpleClickByCss(driver, css, timeout = 1e5) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      await driver.wait(until2.elementLocated(By2.css(css)), timeout);
+      const element = await driver.findElement(By2.css(css)).click();
+      resolve();
+    } catch (e) {
+      console.log(e);
+      resolve(e);
     }
   });
 }
@@ -278,27 +295,27 @@ async function getUSInfo(driver, datas) {
     try {
       const capabilities = import_selenium_webdriver5.default.Capabilities.chrome();
       capabilities.set("chromeOptions", {});
-      const jpItemRef = await db.collection(`ItemsJP/${currentDate}/Items`);
+      const ItemRef = await db.collection(`ItemsJP/${currentDate}/Items`);
       const driver2 = await createDriver(capabilities);
       await driver2.get("https://keepa.com/#");
       keepaLogin(driver2);
       await itemsData.stream();
-      await gotoUrl(driver2, "https://keepa.com/#!viewer");
       while (itemsData.getDocs(99).length) {
+        await gotoUrl(driver2, "https://keepa.com/#!viewer");
         let text = "";
         for (let i = 0; i <= itemsData.getDocs(99).length; i++) {
           if ((_a = itemsData.getDocs(99)[i]) == null ? void 0 : _a.asin) {
             await typeTextByCss(driver2, "#importInputAsin", ((_b = itemsData.getDocs(99)[i]) == null ? void 0 : _b.asin) + " ");
-            console.log((_c = itemsData.getDocs(9999)[i]) == null ? void 0 : _c.asin);
+            console.log((_c = itemsData.getDocs(99)[i]) == null ? void 0 : _c.asin);
           }
         }
         await clickByCss(driver2, "#importSubmit");
-        await clickByCss(driver2, "#shareChartOverlay-close4");
-        await clickByCss(driver2, "#grid-tools-viewer > div:nth-child(1) > span.tool__export > span");
-        await clickByCss(driver2, "#exportSubmit");
+        await clickByCss(driver2, ".relativeAlignCenter #shareChartOverlay-close4");
+        await simpleClickByCss(driver2, "#grid-tools-viewer > div:nth-child(1) > span.tool__export > span", 9e3);
+        await simpleClickByCss(driver2, "#exportSubmit");
         const df = is_mac2 ? "/Users/tadakimatsushita/Downloads" : "C:\xA5Users\xA5Administrator\xA5Downloads";
-        const res = await listFiles(df);
-        await fileRead(res.path, cellNameUS, jpItemRef);
+        const res = await USlistFiles(df);
+        await USfileRead(res.path, cellNameUS, ItemRef);
       }
     } catch (e) {
       reject(e);
@@ -308,9 +325,12 @@ async function getUSInfo(driver, datas) {
 
 // appTest.js
 (async () => {
-  try {
-    await getUSInfo();
-  } catch (e) {
-    console.log(e);
-  }
+  return new Promise(async (resolve, reject) => {
+    try {
+      await getUSInfo();
+      resolve();
+    } catch (e) {
+      reject(e);
+    }
+  });
 })();

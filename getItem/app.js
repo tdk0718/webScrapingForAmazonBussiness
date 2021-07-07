@@ -36,6 +36,7 @@ import 'firebase/firestore'
 import 'firebase/storage'
 import 'firebase/auth'
 import 'firebase/functions'
+import { resolve } from 'path'
 const app = Firebase.initializeApp({
   apiKey: 'AIzaSyCj9Vxn7bQCy80iwxR8fB3HA9iGgySUrBI',
   authDomain: 'webscrapingforbussiness.firebaseapp.com',
@@ -250,11 +251,14 @@ async function getAmazonInfo() {
 }
 
 ;(async () => {
-  // while (true) {
-  try {
-    await getAmazonInfo()
-  } catch (e) {
-    console.log(e)
-  }
+  return new Promise(async (resolve, reject) => {
+    // while (true) {
+    try {
+      await getAmazonInfo()
+      resolve()
+    } catch (e) {
+      reject(e)
+    }
+  })
   // }
 })()

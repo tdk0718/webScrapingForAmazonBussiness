@@ -1,10 +1,13 @@
 import { getUSInfo } from './getUSInfo'
 ;(async () => {
   // while (true) {
-  try {
-    await getUSInfo()
-  } catch (e) {
-    console.log(e)
-  }
+  return new Promise(async (resolve, reject) => {
+    try {
+      await getUSInfo()
+      resolve()
+    } catch (e) {
+      reject(e)
+    }
+  })
   // }
 })()

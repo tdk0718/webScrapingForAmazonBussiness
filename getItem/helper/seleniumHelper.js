@@ -41,10 +41,33 @@ export function clickByCss(driver, css, timeout = 100000) {
   return new Promise(async (resolve, reject) => {
     try {
       await driver.wait(until.elementLocated(By.css(css)), timeout)
-      await driver.findElement(By.css(css)).click()
+      const actions = driver.actions()
+      const element = await driver.findElement(By.css(css))
+
+      await actions
+        .move({ origin: element })
+        .click()
+        .perform()
+
       resolve()
     } catch (e) {
       console.log(e)
+      resolve(e)
+    }
+  })
+}
+
+export function simpleClickByCss(driver, css, timeout = 100000) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      await driver.wait(until.elementLocated(By.css(css)), timeout)
+
+      const element = await driver.findElement(By.css(css)).click()
+
+      resolve()
+    } catch (e) {
+      console.log(e)
+      resolve(e)
     }
   })
 }
