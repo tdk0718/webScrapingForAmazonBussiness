@@ -70,7 +70,8 @@ function keepaLogin(driver) {
 // type/defaultData.js
 var cellNameUS = [
   { text: "\u5546\u54C1\u540D", field: "USTitle", type: "String" },
-  { text: "\u65B0\u54C1: \u73FE\u5728\u4FA1\u683C", field: "priceInUS", type: "Number", omit: ["$", ","] }
+  { text: "\u65B0\u54C1: \u73FE\u5728\u4FA1\u683C", field: "priceInUS", type: "Number", omit: ["$", ","] },
+  { text: "ASIN", field: "asin", type: "String" }
 ];
 
 // helper/helperFunctions.js
@@ -297,10 +298,10 @@ async function getUSInfo(driver, datas) {
       capabilities.set("chromeOptions", {});
       const ItemRef = await db.collection(`ItemsJP/${currentDate}/Items`);
       const driver2 = await createDriver(capabilities);
-      await driver2.get("https://keepa.com/#");
       keepaLogin(driver2);
       await itemsData.stream();
       while (itemsData.getDocs(99).length) {
+        await driver2.get("https://keepa.com/#");
         await gotoUrl(driver2, "https://keepa.com/#!viewer");
         let text = "";
         for (let i = 0; i <= itemsData.getDocs(99).length; i++) {

@@ -44,4 +44,5 @@ export const cellName = [
 export const cellNameUS = [
   { text: '商品名', field: 'USTitle', type: 'String' },
   { text: '新品: 現在価格', field: 'priceInUS', type: 'Number', omit: ['$', ','] },
+  { text: 'ASIN', field: 'asin', type: 'String' },
 ]

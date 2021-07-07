@@ -103,11 +103,12 @@ export async function getUSInfo(driver, datas) {
       const ItemRef = await db.collection(`ItemsJP/${currentDate}/Items`)
 
       const driver = await createDriver(capabilities)
-      await driver.get('https://keepa.com/#')
+
       keepaLogin(driver)
       await itemsData.stream()
 
       while (itemsData.getDocs(99).length) {
+        await driver.get('https://keepa.com/#')
         await gotoUrl(driver, 'https://keepa.com/#!viewer')
         let text = ''
         for (let i = 0; i <= itemsData.getDocs(99).length; i++) {
