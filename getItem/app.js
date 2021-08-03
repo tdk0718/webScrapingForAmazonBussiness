@@ -51,12 +51,7 @@ const db = Firebase.firestore(app)
 const current = new Date()
 const currentDate = current.getFullYear() + '-' + (current.getMonth() + 1)
 
-const getCondition = obj => {
-  if (obj?.Reviews < 4) return false
-  if (!obj?.RankingDrop30) return false
-  if (obj?.RankingDrop30 < 1) return false
-  return true
-}
+
 const logsData = {
   logDB: [],
   async stream() {

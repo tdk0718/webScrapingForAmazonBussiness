@@ -184,6 +184,7 @@ var listFiles = (dirPath) => {
       let reDirPath = is_windows ? dirPath.replace(/¥/g, "\\") : dirPath;
       const files = [];
       const paths = import_fs.default.readdirSync(reDirPath);
+      console.log("paths=>", paths);
       for (let name of paths) {
         try {
           if (name.indexOf("Product_Finder") !== -1) {
@@ -205,6 +206,7 @@ var listFiles = (dirPath) => {
         }
       }
       const res = (0, import_fast_sort.sort)(files).desc((e) => e.sortNum);
+      console.log(res);
       resolve2(res[0]);
     } catch (e) {
       reject(new Error(e));
@@ -241,10 +243,13 @@ function clickByCss(driver, css, timeout = 1e5) {
   return new Promise(async (resolve2, reject) => {
     try {
       await driver.wait(until2.elementLocated(By2.css(css)), timeout);
-      await driver.findElement(By2.css(css)).click();
+      const actions = driver.actions();
+      const element = await driver.findElement(By2.css(css));
+      await actions.move({ origin: element }).click().perform();
       resolve2();
     } catch (e) {
       console.log(e);
+      resolve2(e);
     }
   });
 }

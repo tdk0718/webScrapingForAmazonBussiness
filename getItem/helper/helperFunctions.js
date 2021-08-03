@@ -6,6 +6,13 @@ const is_mac = process.platform === 'darwin'
 const is_linux = process.platform === 'linux'
 import { sort } from 'fast-sort'
 
+const getCondition = obj => {
+  if (obj?.Reviews < 4) return false
+  if (!obj?.RankingDrop30) return false
+  if (obj?.RankingDrop30 < 1) return false
+  return true
+}
+
 export const fileRead = (path, cellName, jpItemRef, accessId) => {
   return new Promise(async (resolve, reject) => {
     const fsRes = await fs.readFile(path, 'utf-8', async (err, data) => {
@@ -220,7 +227,7 @@ export const USlistFiles = dirPath => {
           }
         }
 
-        res = sort(files).desc(e => e.sortNum)
+        res = files.length ? sort(files).desc(e => e.sortNum) : [{ path: '.crdownload' }]
         console.log(res)
       }
       resolve(res[0])

@@ -135,31 +135,34 @@ var USfileRead = (path, cellName, ItemRef) => {
 var USlistFiles = (dirPath) => {
   return new Promise(async (resolve, reject) => {
     try {
-      let reDirPath = is_windows ? dirPath.replace(/¥/g, "\\") : dirPath;
-      const files = [];
-      const paths = import_fs.default.readdirSync(reDirPath);
-      for (let name of paths) {
-        try {
-          if (name.indexOf("Product_Viewer") !== -1) {
-            const path = is_windows ? `${reDirPath}\xA5${name}` : `${reDirPath}/${name}`;
-            const stat = import_fs.default.statSync(path.replace(/¥/g, "\\"));
-            const { ctime } = stat;
-            switch (true) {
-              case stat.isFile():
-                const sortNum = new Date(ctime);
-                files.push({ path: path.replace(/¥/g, "\\"), sortNum: sortNum.getTime() });
-                break;
-              case stat.isDirectory():
-                break;
-              default:
+      let res = [{ path: ".crdownload" }];
+      while (res[0].path.indexOf(".crdownload") !== -1) {
+        let reDirPath = is_windows ? dirPath.replace(/¥/g, "\\") : dirPath;
+        const files = [];
+        const paths = import_fs.default.readdirSync(reDirPath);
+        for (let name of paths) {
+          try {
+            if (name.indexOf("Product_Viewer") !== -1) {
+              const path = is_windows ? `${reDirPath}\xA5${name}` : `${reDirPath}/${name}`;
+              const stat = import_fs.default.statSync(path.replace(/¥/g, "\\"));
+              const { ctime } = stat;
+              switch (true) {
+                case stat.isFile():
+                  const sortNum = new Date(ctime);
+                  files.push({ path: path.replace(/¥/g, "\\"), sortNum: sortNum.getTime() });
+                  break;
+                case stat.isDirectory():
+                  break;
+                default:
+              }
             }
+          } catch (err) {
+            console.error("error:", err.message);
           }
-        } catch (err) {
-          console.error("error:", err.message);
         }
+        res = files.length ? (0, import_fast_sort.sort)(files).desc((e) => e.sortNum) : [{ path: ".crdownload" }];
+        console.log(res);
       }
-      const res = (0, import_fast_sort.sort)(files).desc((e) => e.sortNum);
-      console.log(res);
       resolve(res[0]);
     } catch (e) {
       reject(new Error(e));
@@ -300,14 +303,14 @@ async function getUSInfo(driver, datas) {
       const driver2 = await createDriver(capabilities);
       keepaLogin(driver2);
       await itemsData.stream();
-      while (itemsData.getDocs(99).length) {
+      while (itemsData.getDocs(9999).length) {
         await driver2.get("https://keepa.com/#");
         await gotoUrl(driver2, "https://keepa.com/#!viewer");
         let text = "";
-        for (let i = 0; i <= itemsData.getDocs(99).length; i++) {
-          if ((_a = itemsData.getDocs(99)[i]) == null ? void 0 : _a.asin) {
-            await typeTextByCss(driver2, "#importInputAsin", ((_b = itemsData.getDocs(99)[i]) == null ? void 0 : _b.asin) + " ");
-            console.log((_c = itemsData.getDocs(99)[i]) == null ? void 0 : _c.asin);
+        for (let i = 0; i <= itemsData.getDocs(9999).length; i++) {
+          if ((_a = itemsData.getDocs(9999)[i]) == null ? void 0 : _a.asin) {
+            await typeTextByCss(driver2, "#importInputAsin", ((_b = itemsData.getDocs(9999)[i]) == null ? void 0 : _b.asin) + " ");
+            console.log((_c = itemsData.getDocs(9999)[i]) == null ? void 0 : _c.asin);
           }
         }
         await clickByCss(driver2, "#importSubmit");

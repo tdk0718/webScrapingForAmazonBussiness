@@ -107,14 +107,14 @@ export async function getUSInfo(driver, datas) {
       keepaLogin(driver)
       await itemsData.stream()
 
-      while (itemsData.getDocs(99).length) {
+      while (itemsData.getDocs(9999).length) {
         await driver.get('https://keepa.com/#')
         await gotoUrl(driver, 'https://keepa.com/#!viewer')
         let text = ''
-        for (let i = 0; i <= itemsData.getDocs(99).length; i++) {
-          if (itemsData.getDocs(99)[i]?.asin) {
-            await typeTextByCss(driver, '#importInputAsin', itemsData.getDocs(99)[i]?.asin + ' ')
-            console.log(itemsData.getDocs(99)[i]?.asin)
+        for (let i = 0; i <= itemsData.getDocs(9999).length; i++) {
+          if (itemsData.getDocs(9999)[i]?.asin) {
+            await typeTextByCss(driver, '#importInputAsin', itemsData.getDocs(9999)[i]?.asin + ' ')
+            console.log(itemsData.getDocs(9999)[i]?.asin)
           }
         }
         await clickByCss(driver, '#importSubmit')
