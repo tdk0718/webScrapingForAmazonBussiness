@@ -125,7 +125,9 @@ export const listFiles = dirPath => {
 }
 
 export const USfileRead = (path, cellName, ItemRef) => {
+  // プロミスをリターン
   return new Promise(async (resolve, reject) => {
+    // データを読み込み
     const fsRes = await fs.readFile(path, 'utf-8', async (err, data) => {
       if (err) reject(err)
       const lines = data.split('\n')

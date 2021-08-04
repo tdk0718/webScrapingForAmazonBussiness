@@ -80,6 +80,41 @@ var import_fast_sort = __toModule(require("fast-sort"));
 var is_windows = process.platform === "win32";
 var is_mac = process.platform === "darwin";
 var is_linux = process.platform === "linux";
+var listFiles = (dirPath) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let reDirPath = is_windows ? dirPath.replace(/¥/g, "\\") : dirPath;
+      const files = [];
+      const paths = import_fs.default.readdirSync(reDirPath);
+      console.log("paths=>", paths);
+      for (let name of paths) {
+        try {
+          if (name.indexOf("Product_Finder") !== -1) {
+            const path = is_windows ? `${reDirPath}\xA5${name}` : `${reDirPath}/${name}`;
+            const stat = import_fs.default.statSync(path.replace(/¥/g, "\\"));
+            const { ctime } = stat;
+            switch (true) {
+              case stat.isFile():
+                const sortNum = new Date(ctime);
+                files.push({ path: path.replace(/¥/g, "\\"), sortNum: sortNum.getTime() });
+                break;
+              case stat.isDirectory():
+                break;
+              default:
+            }
+          }
+        } catch (err) {
+          console.error("error:", err.message);
+        }
+      }
+      const res = (0, import_fast_sort.sort)(files).desc((e) => e.sortNum);
+      console.log(res);
+      resolve(res[0]);
+    } catch (e) {
+      reject(new Error(e));
+    }
+  });
+};
 var USfileRead = (path, cellName, ItemRef) => {
   return new Promise(async (resolve, reject) => {
     const fsRes = await import_fs.default.readFile(path, "utf-8", async (err, data) => {
@@ -295,7 +330,6 @@ var itemsData = {
 var db = import_app.default.firestore(app);
 async function getUSInfo(driver, datas) {
   return new Promise(async (resolve, reject) => {
-    var _a, _b, _c;
     try {
       const capabilities = import_selenium_webdriver5.default.Capabilities.chrome();
       capabilities.set("chromeOptions", {});
@@ -306,13 +340,9 @@ async function getUSInfo(driver, datas) {
       while (itemsData.getDocs(9999).length) {
         await driver2.get("https://keepa.com/#");
         await gotoUrl(driver2, "https://keepa.com/#!viewer");
-        let text = "";
-        for (let i = 0; i <= itemsData.getDocs(9999).length; i++) {
-          if ((_a = itemsData.getDocs(9999)[i]) == null ? void 0 : _a.asin) {
-            await typeTextByCss(driver2, "#importInputAsin", ((_b = itemsData.getDocs(9999)[i]) == null ? void 0 : _b.asin) + " ");
-            console.log((_c = itemsData.getDocs(9999)[i]) == null ? void 0 : _c.asin);
-          }
-        }
+        const dfJp = is_mac2 ? "/Users/tadakimatsushita/Downloads" : "C:\xA5Users\xA5Administrator\xA5Downloads";
+        const resJp = await listFiles(dfJp);
+        await typeTextByCss(driver2, "#importInputFileTrigger", resJp.path);
         await clickByCss(driver2, "#importSubmit");
         await simpleClickByCss(driver2, ".relativeAlignCenter #shareChartOverlay-close4");
         await simpleClickByCss(driver2, "#grid-tools-viewer > div:nth-child(1) > span.tool__export > span", 9e3);
