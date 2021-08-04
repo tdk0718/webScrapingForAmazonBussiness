@@ -110,13 +110,12 @@ export async function getUSInfo(driver, datas) {
       while (itemsData.getDocs(999).length) {
         await driver.get('https://keepa.com/#')
         await gotoUrl(driver, 'https://keepa.com/#!viewer')
-        let text = ''
-        for (let i = 0; i <= itemsData.getDocs(999).length; i++) {
-          if (itemsData.getDocs(999)[i]?.asin) {
-            await typeTextByCss(driver, '#importInputAsin', itemsData.getDocs(999)[i]?.asin + ' ')
-            console.log(itemsData.getDocs(999)[i]?.asin)
-          }
-        }
+        const dfJp = is_mac
+          ? '/Users/tadakimatsushita/Downloads'
+          : 'C:¥Users¥Administrator¥Downloads'
+        const resJp = await listFiles(dfJp)
+        await typeTextByCss(driver, '#importInputFileTrigger', resJp.path)
+
         await clickByCss(driver, '#importSubmit')
         await wait(1000)
         await simpleClickByCss(driver, '.relativeAlignCenter #shareChartOverlay-close4')

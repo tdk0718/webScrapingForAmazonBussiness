@@ -145,7 +145,7 @@ const itemsData = {
 async function getAmazonInfo() {
   // ランダムなIDを生成（アクセスの判別で使う）
   const accessId = createNewAccessId()
-  // ログ情報のスロリームを開いている
+  // ログ情報のストリームを開いている
   await logsData.stream()
 
   const jpItemRef = await db.collection(`ItemsJP/${currentDate}/Items`)
