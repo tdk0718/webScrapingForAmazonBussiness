@@ -107,32 +107,28 @@ export async function getUSInfo(driver, datas) {
       keepaLogin(driver)
       await itemsData.stream()
 
-      while (itemsData.getDocs(999).length) {
-        await driver.get('https://keepa.com/#')
-        await gotoUrl(driver, 'https://keepa.com/#!viewer')
-        const dfJp = is_mac
-          ? '/Users/tadakimatsushita/Downloads'
-          : 'C:¥Users¥Administrator¥Downloads'
-        const resJp = await listFiles(dfJp)
-        await typeTextByCss(driver, '#importInputFile', resJp.path)
+      await driver.get('https://keepa.com/#')
+      await gotoUrl(driver, 'https://keepa.com/#!viewer')
+      const dfJp = is_mac ? '/Users/tadakimatsushita/Downloads' : 'C:¥Users¥Administrator¥Downloads'
+      const resJp = await listFiles(dfJp)
+      await typeTextByCss(driver, '#importInputFile', resJp.path)
 
-        await clickByCss(driver, '#importSubmit')
-        await wait(1000)
-        await simpleClickByCss(driver, '.relativeAlignCenter #shareChartOverlay-close4')
-        await wait(1000)
-        await simpleClickByCss(
-          driver,
-          '#grid-tools-viewer > div:nth-child(1) > span.tool__export > span',
-          9000
-        )
-        await wait(1000)
-        await simpleClickByCss(driver, '#exportSubmit')
+      await clickByCss(driver, '#importSubmit')
+      await wait(1000)
+      await simpleClickByCss(driver, '.relativeAlignCenter #shareChartOverlay-close4')
+      await wait(1000)
+      await simpleClickByCss(
+        driver,
+        '#grid-tools-viewer > div:nth-child(1) > span.tool__export > span',
+        9000
+      )
+      await wait(1000)
+      await simpleClickByCss(driver, '#exportSubmit')
 
-        const df = is_mac ? '/Users/tadakimatsushita/Downloads' : 'C:¥Users¥Administrator¥Downloads'
-        const res = await USlistFiles(df)
+      const df = is_mac ? '/Users/tadakimatsushita/Downloads' : 'C:¥Users¥Administrator¥Downloads'
+      const res = await USlistFiles(df)
 
-        await USfileRead(res.path, cellNameUS, ItemRef)
-      }
+      await USfileRead(res.path, cellNameUS, ItemRef)
     } catch (e) {
       reject(e)
     }
