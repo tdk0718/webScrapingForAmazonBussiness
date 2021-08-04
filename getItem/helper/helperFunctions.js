@@ -70,7 +70,7 @@ export const fileRead = (path, cellName, jpItemRef, accessId) => {
           }
           return obj
         }, {})
-
+        console.log(recordData)
         if (getCondition(recordData)) {
           console.log(t)
           await jpItemRef
@@ -124,7 +124,7 @@ export const listFiles = dirPath => {
       }
 
       const res = sort(files).desc(e => e.sortNum)
-      console.log(res)
+      console.log(res[0])
 
       return resolve(res[0])
     } catch (e) {

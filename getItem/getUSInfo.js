@@ -12,7 +12,7 @@ import { keepaLogin } from './helper/keepaLogin'
 
 import { keywords, categories, cellNameUS } from './type/defaultData'
 
-import { USfileRead, listFiles, USlistFiles } from './helper/helperFunctions'
+import { USfileRead, listFiles, USlistFiles, wait } from './helper/helperFunctions'
 
 import {
   getTextByCss,
@@ -107,23 +107,26 @@ export async function getUSInfo(driver, datas) {
       keepaLogin(driver)
       await itemsData.stream()
 
-      while (itemsData.getDocs(9999).length) {
+      while (itemsData.getDocs(999).length) {
         await driver.get('https://keepa.com/#')
         await gotoUrl(driver, 'https://keepa.com/#!viewer')
         let text = ''
-        for (let i = 0; i <= itemsData.getDocs(9999).length; i++) {
-          if (itemsData.getDocs(9999)[i]?.asin) {
-            await typeTextByCss(driver, '#importInputAsin', itemsData.getDocs(9999)[i]?.asin + ' ')
-            console.log(itemsData.getDocs(9999)[i]?.asin)
+        for (let i = 0; i <= itemsData.getDocs(999).length; i++) {
+          if (itemsData.getDocs(999)[i]?.asin) {
+            await typeTextByCss(driver, '#importInputAsin', itemsData.getDocs(999)[i]?.asin + ' ')
+            console.log(itemsData.getDocs(999)[i]?.asin)
           }
         }
         await clickByCss(driver, '#importSubmit')
+        await wait(1000)
         await simpleClickByCss(driver, '.relativeAlignCenter #shareChartOverlay-close4')
+        await wait(1000)
         await simpleClickByCss(
           driver,
           '#grid-tools-viewer > div:nth-child(1) > span.tool__export > span',
           9000
         )
+        await wait(1000)
         await simpleClickByCss(driver, '#exportSubmit')
 
         const df = is_mac ? '/Users/tadakimatsushita/Downloads' : 'C:¥Users¥Administrator¥Downloads'

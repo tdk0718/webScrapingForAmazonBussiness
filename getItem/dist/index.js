@@ -175,6 +175,7 @@ var fileRead = (path, cellName2, jpItemRef, accessId) => {
           }
           return obj;
         }, {});
+        console.log(recordData);
         if (getCondition(recordData)) {
           console.log(t);
           await jpItemRef.doc(recordData.asin).set(__spreadValues(__spreadValues({}, recordData), { created_at: new Date(), accessId }));
@@ -214,7 +215,7 @@ var listFiles = (dirPath) => {
         }
       }
       const res = (0, import_fast_sort.sort)(files).desc((e) => e.sortNum);
-      console.log(res);
+      console.log(res[0]);
       return resolve2(res[0]);
     } catch (e) {
       return reject(new Error(e));
