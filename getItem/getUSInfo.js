@@ -114,7 +114,7 @@ export async function getUSInfo(driver, datas) {
           ? '/Users/tadakimatsushita/Downloads'
           : 'C:¥Users¥Administrator¥Downloads'
         const resJp = await listFiles(dfJp)
-        await typeTextByCss(driver, '#importInputFileTrigger', resJp.path)
+        await typeTextByCss(driver, '#importInputFile', resJp.path)
 
         await clickByCss(driver, '#importSubmit')
         await simpleClickByCss(driver, '.relativeAlignCenter #shareChartOverlay-close4')
