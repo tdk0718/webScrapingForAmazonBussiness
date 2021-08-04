@@ -9,7 +9,7 @@ import 'firebase/functions'
 import { getKeepaInfo } from './keepaInfo'
 import { getAmazonUSInfo } from './getAmazonUSInfo'
 import { keepaLogin } from './helper/keepaLogin'
-
+import fs from 'fs'
 import { keywords, categories, cellNameUS } from './type/defaultData'
 
 import { USfileRead, listFiles, USlistFiles, wait } from './helper/helperFunctions'
@@ -94,7 +94,7 @@ const itemsData = {
 
 const db = Firebase.firestore(app)
 
-export async function getUSInfo(driver, datas) {
+export async function getUSInfo() {
   return new Promise(async (resolve, reject) => {
     try {
       const capabilities = webdriver.Capabilities.chrome()
@@ -104,7 +104,10 @@ export async function getUSInfo(driver, datas) {
 
       const driver = await createDriver(capabilities)
 
-      keepaLogin(driver)
+      await keepaLogin(driver)
+      await clickByCss(driver, '#currentLanguage')
+      await clickByCss(driver, '#language_domains > div:nth-child(2) > span:nth-child(2)')
+
       await itemsData.stream()
 
       await driver.get('https://keepa.com/#')
@@ -117,6 +120,8 @@ export async function getUSInfo(driver, datas) {
       await wait(1000)
       await simpleClickByCss(driver, '.relativeAlignCenter #shareChartOverlay-close4')
       await wait(1000)
+
+      fs.unlinkSync(resJp.path)
       await simpleClickByCss(
         driver,
         '#grid-tools-viewer > div:nth-child(1) > span.tool__export > span',
@@ -129,6 +134,8 @@ export async function getUSInfo(driver, datas) {
       const res = await USlistFiles(df)
 
       await USfileRead(res.path, cellNameUS, ItemRef)
+      await fs.unlinkSync(res.path)
+      return resolve()
     } catch (e) {
       reject(e)
     }
