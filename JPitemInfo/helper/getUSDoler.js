@@ -15,7 +15,7 @@ export function getUSDoler(driver) {
         )
         .getText()
 
-      resolve(Number(dolen))
+      return resolve(Number(dolen))
     } catch (e) {
       reject(e)
     }

@@ -5,9 +5,10 @@ export function createDriver(capabilities) {
   return new Promise(async (resolve, reject) => {
     try {
       const driver = await new Builder().withCapabilities(capabilities).build()
-      resolve(driver)
+      return resolve(driver)
     } catch (e) {
       console.log(e)
+      return
     }
   })
 }
@@ -17,10 +18,10 @@ export function getTextByCss(driver, css, timeout = 100000) {
     try {
       await driver.wait(until.elementLocated(By.css(css)), timeout)
       const result = await driver.findElement(By.css(css)).getText()
-      resolve(result)
+      return resolve(result)
     } catch (e) {
       console.log(e)
-      resolve('')
+      return resolve('')
     }
   })
 }
@@ -29,10 +30,10 @@ export function getTextByXpath(driver, xpath, timeout = 100000) {
     try {
       await driver.wait(until.elementLocated(By.xpath(xpath)), timeout)
       const result = await driver.findElement(By.xpath(xpath)).getText()
-      resolve(result)
+      return resolve(result)
     } catch (e) {
       console.log(e)
-      resolve()
+      return resolve()
     }
   })
 }
@@ -49,10 +50,10 @@ export function clickByCss(driver, css, timeout = 100000) {
         .click()
         .perform()
 
-      resolve()
+      return resolve()
     } catch (e) {
       console.log(e)
-      resolve(e)
+      return reject(e)
     }
   })
 }
@@ -64,10 +65,10 @@ export function simpleClickByCss(driver, css, timeout = 100000) {
 
       const element = await driver.findElement(By.css(css)).click()
 
-      resolve()
+      return resolve()
     } catch (e) {
       console.log(e)
-      resolve(e)
+      return reject(e)
     }
   })
 }
@@ -80,9 +81,10 @@ export function gotoUrl(driver, url) {
         await driver.get(url)
         currentUrl = await driver.getCurrentUrl()
       }
-      resolve()
+      return resolve()
     } catch (e) {
       console.log(e)
+      return
     }
   })
 }
@@ -91,9 +93,10 @@ export function waitEl(driver, css, seconds = 100000) {
   return new Promise(async (resolve, reject) => {
     try {
       await driver.wait(until.elementLocated(By.css(css)), seconds)
-      resolve('ok')
+      return resolve('ok')
     } catch (e) {
       console.log(e)
+      return
     }
   })
 }
@@ -102,9 +105,10 @@ export function getAttrByCss(driver, css, attr) {
   return new Promise(async (resolve, reject) => {
     try {
       const result = await driver.findElement(By.css(css)).getAttribute(attr)
-      resolve(result)
+      return resolve(result)
     } catch (e) {
       console.log(e)
+      return
     }
   })
 }
@@ -113,9 +117,10 @@ export function countEls(driver, css) {
   return new Promise(async (resolve, reject) => {
     try {
       const el = await driver.findElements(By.css(css))
-      resolve(el.length)
+      return resolve(el.length)
     } catch (e) {
       console.log(e)
+      return
     }
   })
 }
@@ -126,10 +131,10 @@ export function typeTextByCss(driver, css, text, timeout = 100000) {
       await driver.wait(until.elementLocated(By.css(css)), timeout)
 
       await driver.findElement(By.css(css)).sendKeys(text)
-      resolve()
+      return resolve()
     } catch (e) {
       console.log(e)
-      resolve()
+      return resolve()
     }
   })
 }

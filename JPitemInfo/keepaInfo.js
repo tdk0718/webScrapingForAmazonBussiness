@@ -132,15 +132,15 @@ export function getKeepaInfo(driver, infoObject) {
         }
 
         await driver.get('https://keepa.com/#')
-        resolve(result)
+        return resolve(result)
         return
       } catch (e) {
         console.log(e)
         await driver.get('https://keepa.com/#')
-        resolve({})
+        return resolve({})
       }
     }
 
-    resolve({})
+    return resolve({})
   })
 }

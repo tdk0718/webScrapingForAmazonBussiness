@@ -4,9 +4,9 @@ import { getUSInfo } from './getUSInfo'
   return new Promise(async (resolve, reject) => {
     try {
       await getUSInfo()
-      resolve()
+      return resolve()
     } catch (e) {
-      reject(e)
+      return reject(e)
     }
   })
   // }

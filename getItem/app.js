@@ -13,7 +13,7 @@ import { keepaLogin } from './helper/keepaLogin'
 import { sort } from 'fast-sort'
 import fs from 'fs'
 
-import { fileRead, listFiles } from './helper/helperFunctions'
+import { fileRead, listFiles, wait } from './helper/helperFunctions'
 
 const is_windows = process.platform === 'win32'
 const is_mac = process.platform === 'darwin'
@@ -50,7 +50,6 @@ const db = Firebase.firestore(app)
 
 const current = new Date()
 const currentDate = current.getFullYear() + '-' + (current.getMonth() + 1)
-
 
 const logsData = {
   logDB: [],
@@ -199,10 +198,11 @@ async function getAmazonInfo() {
           '#grid-asin-finder > div > div.ag-root-wrapper-body.ag-layout-normal > div.ag-root.ag-unselectable.ag-layout-normal > div.ag-body-viewport.ag-layout-normal.ag-row-no-animation > div.ag-center-cols-clipper > div > div > div:nth-child(1) > div:nth-child(3) > a > span',
           10000000
         )
-
+        await wait(1000)
         await clickByCss(driver, '#grid-tools-finder > div:nth-child(1) > span.tool__export > span')
+        await wait(1000)
         await clickByCss(driver, '#exportSubmit')
-
+        await wait(10000)
         const df = is_mac ? '/Users/tadakimatsushita/Downloads' : 'C:¥Users¥Administrator¥Downloads'
         const res = await listFiles(df)
 
@@ -229,11 +229,12 @@ async function getAmazonInfo() {
         )
         if (total !== current) {
           pageNnumber += 1
-          clickByCss(
+          await clickByCss(
             driver,
             '#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > div:nth-child(5) > button'
           )
         } else {
+          isComp = true
           continue
         }
       }
@@ -250,9 +251,9 @@ async function getAmazonInfo() {
     // while (true) {
     try {
       await getAmazonInfo()
-      resolve()
+      return resolve()
     } catch (e) {
-      reject(e)
+      return reject(e)
     }
   })
   // }

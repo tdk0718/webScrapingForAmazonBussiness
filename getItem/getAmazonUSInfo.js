@@ -15,6 +15,6 @@ export function getAmazonUSInfo(driver, infoObject) {
     } catch (e) {
       console.log(e)
     }
-    resolve(result)
+    return resolve(result)
   })
 }

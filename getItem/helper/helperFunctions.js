@@ -13,6 +13,14 @@ const getCondition = obj => {
   return true
 }
 
+export const wait = async ms => {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve() // setTimeoutの第一引数の関数として簡略化できる
+    }, ms)
+  })
+}
+
 export const fileRead = (path, cellName, jpItemRef, accessId) => {
   return new Promise(async (resolve, reject) => {
     const fsRes = await fs.readFile(path, 'utf-8', async (err, data) => {
@@ -70,7 +78,7 @@ export const fileRead = (path, cellName, jpItemRef, accessId) => {
             .set({ ...recordData, ...{ created_at: new Date(), accessId } })
         }
       }
-      resolve('ok')
+      return resolve('ok')
       fs.unlinkSync(path)
     })
   })
@@ -101,6 +109,7 @@ export const listFiles = dirPath => {
               case stat.isFile():
                 const sortNum = new Date(ctime)
                 files.push({ path: path.replace(/¥/g, '\\'), sortNum: sortNum.getTime() })
+                console.log(files)
                 break
 
               case stat.isDirectory():
@@ -117,9 +126,9 @@ export const listFiles = dirPath => {
       const res = sort(files).desc(e => e.sortNum)
       console.log(res)
 
-      resolve(res[0])
+      return resolve(res[0])
     } catch (e) {
-      reject(new Error(e))
+      return reject(new Error(e))
     }
   })
 }
@@ -182,7 +191,7 @@ export const USfileRead = (path, cellName, ItemRef) => {
           })
         } catch (e) {}
       }
-      resolve('ok')
+      return resolve('ok')
       fs.unlinkSync(path)
     })
   })
@@ -230,9 +239,9 @@ export const USlistFiles = dirPath => {
         res = files.length ? sort(files).desc(e => e.sortNum) : [{ path: '.crdownload' }]
         console.log(res)
       }
-      resolve(res[0])
+      return resolve(res[0])
     } catch (e) {
-      reject(new Error(e))
+      return reject(new Error(e))
     }
   })
 }

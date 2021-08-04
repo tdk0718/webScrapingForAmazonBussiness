@@ -104,7 +104,7 @@ const itemsData = {
             result02.push(e.data())
           })
           if (result02) {
-            resolve()
+            return resolve()
           }
         })
     })

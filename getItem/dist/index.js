@@ -57,7 +57,7 @@ function keepaLogin(driver) {
       await driver.findElement(By.id("username")).sendKeys("t.matsushita0718@gmail.com");
       await driver.findElement(By.id("password")).sendKeys("tadaki4281");
       await driver.findElement(By.id("submitLogin")).click();
-      resolve2("ok");
+      return resolve2("ok");
     } catch (e) {
       reject(e);
     }
@@ -127,6 +127,13 @@ var getCondition = (obj) => {
     return false;
   return true;
 };
+var wait = async (ms) => {
+  return new Promise((resolve2) => {
+    setTimeout(() => {
+      resolve2();
+    }, ms);
+  });
+};
 var fileRead = (path, cellName2, jpItemRef, accessId) => {
   return new Promise(async (resolve2, reject) => {
     const fsRes = await import_fs.default.readFile(path, "utf-8", async (err, data) => {
@@ -173,7 +180,7 @@ var fileRead = (path, cellName2, jpItemRef, accessId) => {
           await jpItemRef.doc(recordData.asin).set(__spreadValues(__spreadValues({}, recordData), { created_at: new Date(), accessId }));
         }
       }
-      resolve2("ok");
+      return resolve2("ok");
       import_fs.default.unlinkSync(path);
     });
   });
@@ -195,6 +202,7 @@ var listFiles = (dirPath) => {
               case stat.isFile():
                 const sortNum = new Date(ctime);
                 files.push({ path: path.replace(/¥/g, "\\"), sortNum: sortNum.getTime() });
+                console.log(files);
                 break;
               case stat.isDirectory():
                 break;
@@ -207,9 +215,9 @@ var listFiles = (dirPath) => {
       }
       const res = (0, import_fast_sort.sort)(files).desc((e) => e.sortNum);
       console.log(res);
-      resolve2(res[0]);
+      return resolve2(res[0]);
     } catch (e) {
-      reject(new Error(e));
+      return reject(new Error(e));
     }
   });
 };
@@ -221,9 +229,10 @@ function createDriver(capabilities) {
   return new Promise(async (resolve2, reject) => {
     try {
       const driver = await new Builder2().withCapabilities(capabilities).build();
-      resolve2(driver);
+      return resolve2(driver);
     } catch (e) {
       console.log(e);
+      return;
     }
   });
 }
@@ -232,10 +241,10 @@ function getTextByCss(driver, css, timeout = 1e5) {
     try {
       await driver.wait(until2.elementLocated(By2.css(css)), timeout);
       const result = await driver.findElement(By2.css(css)).getText();
-      resolve2(result);
+      return resolve2(result);
     } catch (e) {
       console.log(e);
-      resolve2("");
+      return resolve2("");
     }
   });
 }
@@ -246,10 +255,10 @@ function clickByCss(driver, css, timeout = 1e5) {
       const actions = driver.actions();
       const element = await driver.findElement(By2.css(css));
       await actions.move({ origin: element }).click().perform();
-      resolve2();
+      return resolve2();
     } catch (e) {
       console.log(e);
-      resolve2(e);
+      return reject(e);
     }
   });
 }
@@ -261,9 +270,10 @@ function gotoUrl(driver, url) {
         await driver.get(url);
         currentUrl = await driver.getCurrentUrl();
       }
-      resolve2();
+      return resolve2();
     } catch (e) {
       console.log(e);
+      return;
     }
   });
 }
@@ -271,9 +281,10 @@ function waitEl(driver, css, seconds = 1e5) {
   return new Promise(async (resolve2, reject) => {
     try {
       await driver.wait(until2.elementLocated(By2.css(css)), seconds);
-      resolve2("ok");
+      return resolve2("ok");
     } catch (e) {
       console.log(e);
+      return;
     }
   });
 }
@@ -361,8 +372,11 @@ async function getAmazonInfo() {
       while (!isComp) {
         await waitEl(driver, ".cssload-box-loading", 1e5);
         await waitEl(driver, "#grid-asin-finder > div > div.ag-root-wrapper-body.ag-layout-normal > div.ag-root.ag-unselectable.ag-layout-normal > div.ag-body-viewport.ag-layout-normal.ag-row-no-animation > div.ag-center-cols-clipper > div > div > div:nth-child(1) > div:nth-child(3) > a > span", 1e7);
+        await wait(1e3);
         await clickByCss(driver, "#grid-tools-finder > div:nth-child(1) > span.tool__export > span");
+        await wait(1e3);
         await clickByCss(driver, "#exportSubmit");
+        await wait(1e4);
         const df = is_mac2 ? "/Users/tadakimatsushita/Downloads" : "C:\xA5Users\xA5Administrator\xA5Downloads";
         const res = await listFiles(df);
         await fileRead(res.path, cellName, jpItemRef, accessId);
@@ -379,8 +393,9 @@ async function getAmazonInfo() {
         const current2 = await getTextByCss(driver, "#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > span:nth-child(3)");
         if (total !== current2) {
           pageNnumber += 1;
-          clickByCss(driver, "#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > div:nth-child(5) > button");
+          await clickByCss(driver, "#grid-asin-finder > div > div.ag-paging-panel.ag-unselectable > span.ag-paging-page-summary-panel > div:nth-child(5) > button");
         } else {
+          isComp = true;
           continue;
         }
       }
@@ -394,9 +409,9 @@ async function getAmazonInfo() {
   return new Promise(async (resolve2, reject) => {
     try {
       await getAmazonInfo();
-      resolve2();
+      return resolve2();
     } catch (e) {
-      reject(e);
+      return reject(e);
     }
   });
 })();
