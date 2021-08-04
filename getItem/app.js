@@ -11,6 +11,8 @@ import { getAmazonUSInfo } from './getAmazonUSInfo'
 import { getUSDoler } from './helper/getUSDoler'
 import { keepaLogin } from './helper/keepaLogin'
 import { sort } from 'fast-sort'
+import { getUSInfo } from './getUSInfo'
+
 import fs from 'fs'
 
 import { fileRead, listFiles } from './helper/helperFunctions'
@@ -206,7 +208,7 @@ async function getAmazonInfo() {
         const res = await listFiles(df)
 
         await fileRead(res.path, cellName, jpItemRef, accessId)
-
+        await getUSInfo()
         // console.log(fsRes)
 
         const logInfo = {

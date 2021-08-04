@@ -9,7 +9,7 @@ import 'firebase/functions'
 import { getKeepaInfo } from './keepaInfo'
 import { getAmazonUSInfo } from './getAmazonUSInfo'
 import { keepaLogin } from './helper/keepaLogin'
-
+import fs from 'fs'
 import { keywords, categories, cellNameUS } from './type/defaultData'
 
 import { USfileRead, listFiles, USlistFiles } from './helper/helperFunctions'
@@ -94,7 +94,7 @@ const itemsData = {
 
 const db = Firebase.firestore(app)
 
-export async function getUSInfo(driver, datas) {
+export async function getUSInfo() {
   return new Promise(async (resolve, reject) => {
     try {
       const capabilities = webdriver.Capabilities.chrome()
@@ -104,32 +104,34 @@ export async function getUSInfo(driver, datas) {
 
       const driver = await createDriver(capabilities)
 
-      keepaLogin(driver)
+      await keepaLogin(driver)
+      await clickByCss(driver, '#currentLanguage')
+      await clickByCss(driver, '#language_domains > div:nth-child(2) > span:nth-child(2)')
+
       await itemsData.stream()
 
-      while (itemsData.getDocs(9999).length) {
-        await driver.get('https://keepa.com/#')
-        await gotoUrl(driver, 'https://keepa.com/#!viewer')
-        const dfJp = is_mac
-          ? '/Users/tadakimatsushita/Downloads'
-          : 'C:¥Users¥Administrator¥Downloads'
-        const resJp = await listFiles(dfJp)
-        await typeTextByCss(driver, '#importInputFile', resJp.path)
+      await driver.get('https://keepa.com/#')
+      await gotoUrl(driver, 'https://keepa.com/#!viewer')
+      const dfJp = is_mac ? '/Users/tadakimatsushita/Downloads' : 'C:¥Users¥Administrator¥Downloads'
+      const resJp = await listFiles(dfJp)
+      await typeTextByCss(driver, '#importInputFile', resJp.path)
 
-        await clickByCss(driver, '#importSubmit')
-        await simpleClickByCss(driver, '.relativeAlignCenter #shareChartOverlay-close4')
-        await simpleClickByCss(
-          driver,
-          '#grid-tools-viewer > div:nth-child(1) > span.tool__export > span',
-          9000
-        )
-        await simpleClickByCss(driver, '#exportSubmit')
+      await clickByCss(driver, '#importSubmit')
+      await simpleClickByCss(driver, '.relativeAlignCenter #shareChartOverlay-close4')
+      fs.unlinkSync(resJp.path)
+      await simpleClickByCss(
+        driver,
+        '#grid-tools-viewer > div:nth-child(1) > span.tool__export > span',
+        9000
+      )
+      await simpleClickByCss(driver, '#exportSubmit')
 
-        const df = is_mac ? '/Users/tadakimatsushita/Downloads' : 'C:¥Users¥Administrator¥Downloads'
-        const res = await USlistFiles(df)
+      const df = is_mac ? '/Users/tadakimatsushita/Downloads' : 'C:¥Users¥Administrator¥Downloads'
+      const res = await USlistFiles(df)
 
-        await USfileRead(res.path, cellNameUS, ItemRef)
-      }
+      await USfileRead(res.path, cellNameUS, ItemRef)
+      await fs.unlinkSync(res.path)
+      return resolve()
     } catch (e) {
       reject(e)
     }

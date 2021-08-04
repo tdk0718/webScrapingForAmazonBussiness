@@ -67,6 +67,9 @@ function keepaLogin(driver) {
   });
 }
 
+// getUSInfo.js
+var import_fs2 = __toModule(require("fs"));
+
 // type/defaultData.js
 var cellNameUS = [
   { text: "\u5546\u54C1\u540D", field: "USTitle", type: "String" },
@@ -328,29 +331,32 @@ var itemsData = {
   }
 };
 var db = import_app.default.firestore(app);
-async function getUSInfo(driver, datas) {
+async function getUSInfo() {
   return new Promise(async (resolve, reject) => {
     try {
       const capabilities = import_selenium_webdriver5.default.Capabilities.chrome();
       capabilities.set("chromeOptions", {});
       const ItemRef = await db.collection(`ItemsJP/${currentDate}/Items`);
-      const driver2 = await createDriver(capabilities);
-      keepaLogin(driver2);
+      const driver = await createDriver(capabilities);
+      await keepaLogin(driver);
+      await clickByCss(driver, "#currentLanguage");
+      await clickByCss(driver, "#language_domains > div:nth-child(2) > span:nth-child(2)");
       await itemsData.stream();
-      while (itemsData.getDocs(9999).length) {
-        await driver2.get("https://keepa.com/#");
-        await gotoUrl(driver2, "https://keepa.com/#!viewer");
-        const dfJp = is_mac2 ? "/Users/tadakimatsushita/Downloads" : "C:\xA5Users\xA5Administrator\xA5Downloads";
-        const resJp = await listFiles(dfJp);
-        await typeTextByCss(driver2, "#importInputFileTrigger", resJp.path);
-        await clickByCss(driver2, "#importSubmit");
-        await simpleClickByCss(driver2, ".relativeAlignCenter #shareChartOverlay-close4");
-        await simpleClickByCss(driver2, "#grid-tools-viewer > div:nth-child(1) > span.tool__export > span", 9e3);
-        await simpleClickByCss(driver2, "#exportSubmit");
-        const df = is_mac2 ? "/Users/tadakimatsushita/Downloads" : "C:\xA5Users\xA5Administrator\xA5Downloads";
-        const res = await USlistFiles(df);
-        await USfileRead(res.path, cellNameUS, ItemRef);
-      }
+      await driver.get("https://keepa.com/#");
+      await gotoUrl(driver, "https://keepa.com/#!viewer");
+      const dfJp = is_mac2 ? "/Users/tadakimatsushita/Downloads" : "C:\xA5Users\xA5Administrator\xA5Downloads";
+      const resJp = await listFiles(dfJp);
+      await typeTextByCss(driver, "#importInputFile", resJp.path);
+      await clickByCss(driver, "#importSubmit");
+      await simpleClickByCss(driver, ".relativeAlignCenter #shareChartOverlay-close4");
+      import_fs2.default.unlinkSync(resJp.path);
+      await simpleClickByCss(driver, "#grid-tools-viewer > div:nth-child(1) > span.tool__export > span", 9e3);
+      await simpleClickByCss(driver, "#exportSubmit");
+      const df = is_mac2 ? "/Users/tadakimatsushita/Downloads" : "C:\xA5Users\xA5Administrator\xA5Downloads";
+      const res = await USlistFiles(df);
+      await USfileRead(res.path, cellNameUS, ItemRef);
+      await import_fs2.default.unlinkSync(res.path);
+      return resolve();
     } catch (e) {
       reject(e);
     }
